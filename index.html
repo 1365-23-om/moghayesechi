@@ -1,1 +1,66 @@
 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مقایسه‌چی | فروشگاه آنلاین</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <div class="container nav">
+    <a href="#" class="logo">مقایسه‌چی</a>
+
+    <div class="search">
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="جستجوی محصول..."
+      >
+    </div>
+
+    <button id="cartButton" class="cart-button">
+      🛒 سبد خرید
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>خرید ساده، سریع و مطمئن</h1>
+    <p>
+      محصولات منتخب را پیدا کنید و با چند کلیک به سبد خرید اضافه کنید.
+    </p>
+
+    <a href="#products" class="hero-button">
+      مشاهده محصولات
+    </a>
+  </div>
+</section>
+
+<section id="products" class="products-section">
+  <div class="container">
+
+    <div class="products-title">
+      <h2>محصولات فروشگاه</h2>
+    </div>
+
+    <div id="productGrid" class="products-grid"></div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    © 2026 مقایسه‌چی — همه حقوق محفوظ است.
+  </div>
+</footer>
+
+<script src="products.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
