@@ -173,35 +173,30 @@ function renderOrders(orders) {
         ${order.status}
       </p>
 
-      <select
-        onchange="changeStatus('${order.id}', this.value)"
-        style="padding:10px;border-radius:8px"
-      >
-        <option value="pending"
-          ${order.status === "pending" ? "selected" : ""}>
-          در انتظار
-        </option>
+    <select
+  onchange="changeStatus('${order.id}', this.value)"
+  style="padding:10px;border-radius:8px"
+>
+  <option value="pending">
+    در انتظار
+  </option>
 
-        <option value="confirmed"
-          ${order.status === "confirmed" ? "selected" : ""}>
-          تأیید شده
-        </option>
+  <option value="confirmed">
+    تأیید شده
+  </option>
 
-        <option value="shipped"
-          ${order.status === "shipped" ? "selected" : ""}>
-          ارسال شده
-        </option>
+  <option value="shipped">
+    ارسال شده
+  </option>
 
-        <option value="delivered"
-          ${order.status === "delivered" ? "selected" : ""}>
-          تحویل شده
-        </option>
+  <option value="delivered">
+    تحویل شده
+  </option>
 
-        <option value="cancelled"
-          ${order.status === "cancelled" ? "selected" : ""}>
-          لغو شده
-        </option>
-      </select>
+  <option value="cancelled">
+    لغو شده
+  </option>
+</select>
     `;
 
     container.appendChild(card);
