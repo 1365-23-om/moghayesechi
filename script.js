@@ -69,8 +69,10 @@ function openCart() {
 
   cart.forEach(item => {
     const product = products.find(p => p.id === item.id);
-    const subtotal = product.price * item.qty;
 
+    if (!product) return;
+
+    const subtotal = product.price * item.qty;
     total += subtotal;
 
     message +=
@@ -87,7 +89,11 @@ function openCart() {
   );
 
   if (choice) {
-    async function checkout() {
+    checkout();
+  }
+}
+
+async function checkout() {
   const name = prompt("نام و نام خانوادگی:");
   if (!name) return;
 
@@ -102,8 +108,11 @@ function openCart() {
     return;
   }
 
-  const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
+  const SUPABASE_URL =
+    "https://evvdggckoalesyyyqhqm.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
   const items = cart.map(item => {
     const product = products.find(p => p.id === item.id);
@@ -117,12 +126,11 @@ function openCart() {
   });
 
   try {
-    alert("برای ثبت سفارش ابتدا باید وارد حساب کاربری شوید.");
-
-    const token = localStorage.getItem("supabase_access_token");
+    const token =
+      localStorage.getItem("supabase_access_token");
 
     if (!token) {
-      alert("ورود کاربر هنوز در سایت فعال نشده است.");
+      alert("ابتدا باید وارد حساب کاربری شوید.");
       return;
     }
 
@@ -147,7 +155,9 @@ function openCart() {
     const result = await response.json();
 
     if (!response.ok || !result.ok) {
-      throw new Error(result.error || "خطا در ثبت سفارش");
+      throw new Error(
+        result.error || "خطا در ثبت سفارش"
+      );
     }
 
     alert(
@@ -161,6 +171,15 @@ function openCart() {
 
   } catch (error) {
     console.error(error);
-    alert("❌ ثبت سفارش انجام نشد:\n" + error.message);
+
+    alert(
+      "❌ ثبت سفارش انجام نشد:\n" +
+      error.message
+    );
   }
 }
+
+cartButton.addEventListener("click", openCart);
+
+showProducts();
+updateCart();
