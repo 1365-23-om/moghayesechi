@@ -1,66 +1,151 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>مقایسه‌چی | فروشگاه آنلاین</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
-<script src="auth.js"></script>
+
 <body>
 
+<!-- ورود و ثبت‌نام -->
+<section id="authBox" class="auth-box">
+  <div class="auth-card">
+
+    <h2>ورود / ثبت‌نام</h2>
+
+    <input
+      id="authEmail"
+      type="email"
+      placeholder="ایمیل"
+    >
+
+    <input
+      id="authPassword"
+      type="password"
+      placeholder="رمز عبور"
+    >
+
+    <button id="signupButton">
+      ثبت‌نام
+    </button>
+
+    <button id="loginButton">
+      ورود
+    </button>
+
+    <p id="authMessage"></p>
+
+  </div>
+</section>
+
+
+<!-- سربرگ -->
 <header class="header">
+
   <div class="container nav">
-    <a href="#" class="logo">مقایسه‌چی</a>
+
+    <a href="#" class="logo">
+      مقایسه‌چی
+    </a>
 
     <div class="search">
+
       <input
         id="searchInput"
         type="search"
         placeholder="جستجوی محصول..."
       >
+
     </div>
 
-    <button id="cartButton" class="cart-button">
+    <button
+      id="cartButton"
+      class="cart-button"
+    >
       🛒 سبد خرید
     </button>
+
   </div>
+
 </header>
 
+
+<!-- معرفی -->
 <section class="hero">
+
   <div class="container">
-    <h1>خرید ساده، سریع و مطمئن</h1>
+
+    <h1>
+      خرید ساده، سریع و مطمئن
+    </h1>
+
     <p>
       محصولات منتخب را پیدا کنید و با چند کلیک به سبد خرید اضافه کنید.
     </p>
 
-    <a href="#products" class="hero-button">
+    <a
+      href="#products"
+      class="hero-button"
+    >
       مشاهده محصولات
     </a>
+
   </div>
+
 </section>
 
-<section id="products" class="products-section">
+
+<!-- محصولات -->
+<section
+  id="products"
+  class="products-section"
+>
+
   <div class="container">
 
     <div class="products-title">
-      <h2>محصولات فروشگاه</h2>
+
+      <h2>
+        محصولات فروشگاه
+      </h2>
+
     </div>
 
-    <div id="productGrid" class="products-grid"></div>
+    <div
+      id="productGrid"
+      class="products-grid"
+    ></div>
 
   </div>
+
 </section>
 
+
+<!-- فوتر -->
 <footer class="footer">
+
   <div class="container">
+
     © 2026 مقایسه‌چی — همه حقوق محفوظ است.
+
   </div>
+
 </footer>
 
+
+<!-- JavaScript -->
+
 <script src="products.js"></script>
+
 <script src="script.js"></script>
 
+<script src="auth.js"></script>
+
 </body>
+
 </html>
