@@ -160,3 +160,4 @@ document.addEventListener(
   "DOMContentLoaded",
   loadAdminOrders
 );
+console.log("ADMIN JS NEW VERSION");
