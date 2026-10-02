@@ -2,6 +2,11 @@ const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
 const authMessage = document.getElementById("authMessage");
+const authBox = document.getElementById("authBox");
+const authEmail = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const signupButton = document.getElementById("signupButton");
+const loginButton = document.getElementById("loginButton");
 
 function showAuthMessage(message) {
   if (authMessage) {
@@ -9,9 +14,36 @@ function showAuthMessage(message) {
   }
 }
 
+function showLoggedIn(email) {
+  if (!authBox) return;
+
+  authBox.innerHTML = `
+    <div class="auth-card">
+      <h2>✅ وارد شدید</h2>
+
+      <p>
+        کاربر:
+        <strong>${email}</strong>
+      </p>
+
+      <p id="authMessage">
+        ورود با موفقیت انجام شد.
+      </p>
+
+      <button id="logoutButton">
+        خروج
+      </button>
+    </div>
+  `;
+
+  document
+    .getElementById("logoutButton")
+    .addEventListener("click", logout);
+}
+
 async function signup() {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
 
   if (!email || !password) {
     showAuthMessage("ایمیل و رمز عبور را وارد کنید.");
@@ -33,8 +65,8 @@ async function signup() {
           "apikey": SUPABASE_KEY
         },
         body: JSON.stringify({
-          email: email,
-          password: password
+          email,
+          password
         })
       }
     );
@@ -42,11 +74,15 @@ async function signup() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.msg || data.message || "ثبت‌نام ناموفق بود.");
+      throw new Error(
+        data.msg ||
+        data.message ||
+        "ثبت‌نام ناموفق بود."
+      );
     }
 
     showAuthMessage(
-      "ثبت‌نام انجام شد. اگر تأیید ایمیل فعال باشد، ایمیل خود را بررسی کنید."
+      "✅ ثبت‌نام انجام شد. اکنون می‌توانید وارد شوید."
     );
 
   } catch (error) {
@@ -55,8 +91,8 @@ async function signup() {
 }
 
 async function login() {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
 
   if (!email || !password) {
     showAuthMessage("ایمیل و رمز عبور را وارد کنید.");
@@ -73,8 +109,8 @@ async function login() {
           "apikey": SUPABASE_KEY
         },
         body: JSON.stringify({
-          email: email,
-          password: password
+          email,
+          password
         })
       }
     );
@@ -82,7 +118,11 @@ async function login() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error_description || data.msg || "ورود ناموفق بود.");
+      throw new Error(
+        data.error_description ||
+        data.msg ||
+        "ورود ناموفق بود."
+      );
     }
 
     localStorage.setItem(
@@ -95,17 +135,46 @@ async function login() {
       data.refresh_token
     );
 
-    showAuthMessage("✅ ورود با موفقیت انجام شد.");
+    localStorage.setItem(
+      "supabase_user_email",
+      email
+    );
+
+    showLoggedIn(email);
 
   } catch (error) {
     showAuthMessage("❌ " + error.message);
   }
 }
 
-document
-  .getElementById("signupButton")
-  .addEventListener("click", signup);
+function logout() {
+  localStorage.removeItem("supabase_access_token");
+  localStorage.removeItem("supabase_refresh_token");
+  localStorage.removeItem("supabase_user_email");
 
-document
-  .getElementById("loginButton")
-  .addEventListener("click", login);
+  location.reload();
+}
+
+function checkExistingLogin() {
+  const token = localStorage.getItem(
+    "supabase_access_token"
+  );
+
+  const email = localStorage.getItem(
+    "supabase_user_email"
+  );
+
+  if (token && email) {
+    showLoggedIn(email);
+  }
+}
+
+if (signupButton) {
+  signupButton.addEventListener("click", signup);
+}
+
+if (loginButton) {
+  loginButton.addEventListener("click", login);
+}
+
+checkExistingLogin();
