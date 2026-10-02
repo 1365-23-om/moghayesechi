@@ -1,4 +1,3 @@
-
 const SUPABASE_URL =
   "https://evvdggckoalesyyyqhqm.supabase.co";
 
@@ -8,116 +7,133 @@ const SUPABASE_KEY =
 const FUNCTION_URL =
   `${SUPABASE_URL}/functions/v1/admin-orders`;
 
-const message =
-  document.getElementById("adminMessage");
+async function getFreshAccessToken() {
+  let accessToken =
+    localStorage.getItem("supabase_access_token");
 
-const container =
-  document.getElementById("adminOrders");
+  const refreshToken =
+    localStorage.getItem("supabase_refresh_token");
 
+  if (!refreshToken) {
+    return accessToken;
+  }
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          refresh_token: refreshToken
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.access_token) {
+      localStorage.setItem(
+        "supabase_access_token",
+        data.access_token
+      );
+
+      if (data.refresh_token) {
+        localStorage.setItem(
+          "supabase_refresh_token",
+          data.refresh_token
+        );
+      }
+
+      accessToken = data.access_token;
+    }
+  } catch (error) {
+    console.error("Token refresh error:", error);
+  }
+
+  return accessToken;
+}
 
 document.addEventListener(
   "DOMContentLoaded",
   loadAdminOrders
 );
 
-
 async function loadAdminOrders() {
+  const message =
+    document.getElementById("adminMessage");
 
-  if (!message || !container) {
-    return;
-  }
-
-  const token =
-    localStorage.getItem(
-      "supabase_access_token"
-    );
-
-  if (!token) {
-
-    message.textContent =
-      "❌ ابتدا وارد حساب مدیر شوید.";
-
-    return;
-  }
+  const container =
+    document.getElementById("adminOrders");
 
   message.textContent =
-    "⏳ در حال دریافت سفارش‌ها...";
+    "⏳ در حال بررسی ورود...";
+
+  const token =
+    await getFreshAccessToken();
+
+  if (!token) {
+    message.textContent =
+      "❌ ابتدا وارد حساب مدیر شوید.";
+    return;
+  }
 
   try {
-
     const response = await fetch(
       FUNCTION_URL,
       {
         method: "GET",
-
         headers: {
-          "Authorization":
-            `Bearer ${token}`,
-
-          "apikey":
-            SUPABASE_KEY,
-
-          "Content-Type":
-            "application/json"
+          "Authorization": `Bearer ${token}`,
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
         }
       }
     );
 
-    const text =
-      await response.text();
-
-    let result = {};
-
-    try {
-      result = JSON.parse(text);
-    } catch {
-      result = {
-        error: text
-      };
-    }
+    const data =
+      await response.json();
 
     if (!response.ok) {
-
       throw new Error(
-        result.error ||
-        `خطای سرور: ${response.status}`
+        data.error ||
+        `خطای ${response.status}`
       );
     }
 
-    if (!result.ok) {
-
+    if (!data.ok) {
       throw new Error(
-        result.error ||
+        data.error ||
         "دریافت سفارش‌ها ناموفق بود."
       );
     }
 
     renderOrders(
-      result.orders || []
+      data.orders || []
     );
 
   } catch (error) {
-
-    console.error(
-      "admin-orders:",
-      error
-    );
+    console.error(error);
 
     message.textContent =
       "❌ " + error.message;
   }
 }
 
-
 function renderOrders(orders) {
+  const message =
+    document.getElementById("adminMessage");
 
-  if (orders.length === 0) {
+  const container =
+    document.getElementById("adminOrders");
 
+  if (!orders.length) {
     message.textContent =
-      "📦 هنوز سفارشی وجود ندارد.";
-
+      "📦 سفارشی وجود ندارد.";
     container.innerHTML = "";
-
     return;
   }
 
@@ -127,7 +143,6 @@ function renderOrders(orders) {
   container.innerHTML = "";
 
   orders.forEach(order => {
-
     const card =
       document.createElement("div");
 
@@ -139,58 +154,29 @@ function renderOrders(orders) {
       border-radius:12px;
     `;
 
-    const amount =
-      new Intl.NumberFormat("fa-IR")
-        .format(
-          Number(order.total_amount || 0)
-        );
-
-    const date =
-      order.created_at
-        ? new Date(
-            order.created_at
-          ).toLocaleString("fa-IR")
-        : "-";
-
     card.innerHTML = `
       <h3>📦 سفارش</h3>
 
       <p>
         <strong>شماره سفارش:</strong>
-        ${escapeHtml(order.id)}
-      </p>
-
-      <p>
-        <strong>مشتری:</strong>
-        ${escapeHtml(order.customer_id || "-")}
+        ${order.id}
       </p>
 
       <p>
         <strong>مبلغ:</strong>
-        ${amount} تومان
-      </p>
-
-      <p>
-        <strong>تاریخ:</strong>
-        ${date}
+        ${Number(order.total_amount || 0)
+          .toLocaleString("fa-IR")} تومان
       </p>
 
       <p>
         <strong>وضعیت:</strong>
-        <span id="status-${order.id}">
-          ${escapeHtml(order.status || "pending")}
-        </span>
+        ${order.status}
       </p>
 
       <select
         onchange="changeStatus('${order.id}', this.value)"
-        style="
-          padding:10px;
-          border-radius:8px;
-          margin-top:10px;
-        "
+        style="padding:10px;border-radius:8px"
       >
-
         <option value="pending"
           ${order.status === "pending" ? "selected" : ""}>
           در انتظار
@@ -215,7 +201,6 @@ function renderOrders(orders) {
           ${order.status === "cancelled" ? "selected" : ""}>
           لغو شده
         </option>
-
       </select>
     `;
 
@@ -223,44 +208,25 @@ function renderOrders(orders) {
   });
 }
 
-
-async function changeStatus(
-  orderId,
-  status
-) {
-
+async function changeStatus(orderId, status) {
   const token =
-    localStorage.getItem(
-      "supabase_access_token"
-    );
+    await getFreshAccessToken();
 
   if (!token) {
-
-    alert(
-      "❌ نشست ورود شما منقضی شده است. دوباره وارد شوید."
-    );
-
+    alert("❌ نشست ورود منقضی شده است.");
     return;
   }
 
   try {
-
     const response = await fetch(
       FUNCTION_URL,
       {
         method: "PATCH",
-
         headers: {
-          "Authorization":
-            `Bearer ${token}`,
-
-          "apikey":
-            SUPABASE_KEY,
-
-          "Content-Type":
-            "application/json"
+          "Authorization": `Bearer ${token}`,
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
           id: orderId,
           status: status
@@ -268,61 +234,21 @@ async function changeStatus(
       }
     );
 
-    const text =
-      await response.text();
+    const data =
+      await response.json();
 
-    let result = {};
-
-    try {
-      result = JSON.parse(text);
-    } catch {
-      result = {
-        error: text
-      };
-    }
-
-    if (!response.ok) {
-
+    if (!response.ok || !data.ok) {
       throw new Error(
-        result.error ||
-        `خطای سرور: ${response.status}`
-      );
-    }
-
-    if (!result.ok) {
-
-      throw new Error(
-        result.error ||
+        data.error ||
         "تغییر وضعیت انجام نشد."
       );
     }
 
-    alert(
-      "✅ وضعیت سفارش تغییر کرد."
-    );
+    alert("✅ وضعیت سفارش تغییر کرد.");
 
-    await loadAdminOrders();
+    loadAdminOrders();
 
   } catch (error) {
-
-    console.error(
-      "changeStatus:",
-      error
-    );
-
-    alert(
-      "❌ " + error.message
-    );
+    alert("❌ " + error.message);
   }
-}
-
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
