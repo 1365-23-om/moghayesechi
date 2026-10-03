@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>پرداخت | آرین مقایسه‌چی</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f5f6f8;
+      color: #222;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 30px auto;
+      padding: 15px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0 15px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    .product {
+      background: #f8f8f8;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 10px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 12px 0;
+    }
+
+    .notice {
+      background: #fff8df;
+      padding: 12px;
+      border-radius: 10px;
+      line-height: 1.8;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    #payButton {
+      background: #168a45;
+      color: white;
+    }
+
+    #backButton {
+      background: #eee;
+    }
+
+    #message {
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .error {
+      display: block !important;
+      background: #ffe8e8;
+      color: #a40000;
+    }
+
+    .success {
+      display: block !important;
+      background: #e6f8ed;
+      color: #087a35;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h1>💳 پرداخت سفارش</h1>
+    <p>آرین مقایسه‌چی</p>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="card">
+
+    <h2>👤 اطلاعات مشتری</h2>
+
+    <label>نام و نام خانوادگی</label>
+    <input
+      id="fullName"
+      type="text"
+      placeholder="نام و نام خانوادگی"
+    >
+
+    <label>شماره موبایل</label>
+    <input
+      id="phone"
+      type="tel"
+      placeholder="09123456789"
+    >
+
+    <label>آدرس تحویل</label>
+    <textarea
+      id="address"
+      placeholder="آدرس کامل تحویل سفارش"
+    ></textarea>
+
+  </div>
+
+  <div class="card">
+
+    <h2>🛍 خلاصه سفارش</h2>
+
+    <div id="orderItems"></div>
+
+    <div class="row">
+      <span>مبلغ محصولات</span>
+      <strong id="productsTotal">۰ تومان</strong>
+    </div>
+
+    <div class="row">
+      <span>🛵 هزینه پیک</span>
+      <strong>بر عهده مشتری</strong>
+    </div>
+
+    <div class="row">
+      <strong>مبلغ سفارش</strong>
+      <strong id="orderTotal">۰ تومان</strong>
+    </div>
+
+    <div class="notice">
+      هزینه پیک جداگانه و بر عهده مشتری است.
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <label>
+      <input
+        type="checkbox"
+        id="acceptRules"
+        style="width:auto"
+      >
+      قوانین و مقررات را می‌پذیرم.
+    </label>
+
+    <button id="payButton">
+      💳 ادامه برای پرداخت
+    </button>
+
+    <button id="backButton">
+      بازگشت به فروشگاه
+    </button>
+
+  </div>
+
+</div>
+
+<script src="products.js"></script>
+<script src="checkout.js"></script>
+
+</body>
+</html>
