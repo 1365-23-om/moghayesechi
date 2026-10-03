@@ -160,4 +160,8 @@ document.addEventListener(
   "DOMContentLoaded",
   loadAdminOrders
 );
-console.log("ADMIN JS NEW VERSION");
+
+console.log(
+  "ADMIN JS NEW VERSION",
+  localStorage.getItem("supabase_access_token")
+);
