@@ -7,6 +7,9 @@ const SUPABASE_KEY =
 const CREATE_ORDER_URL =
   `${SUPABASE_URL}/functions/v1/create-order`;
 
+const ZARINPAL_CREATE_URL =
+  `${SUPABASE_URL}/functions/v1/zarinpal-create`;
+
 const fullNameInput =
   document.getElementById("fullName");
 
@@ -61,9 +64,7 @@ function escapeHTML(value) {
 }
 
 function renderOrder() {
-
   if (!cart.length) {
-
     orderItems.innerHTML =
       "<p>🛒 سبد خرید خالی است.</p>";
 
@@ -81,13 +82,10 @@ function renderOrder() {
   let total = 0;
 
   orderItems.innerHTML = cart.map(item => {
-
     const product =
       products.find(p => p.id === item.id);
 
-    if (!product) {
-      return "";
-    }
+    if (!product) return "";
 
     const quantity =
       Number(item.qty || 1);
@@ -99,7 +97,6 @@ function renderOrder() {
 
     return `
       <div class="product">
-
         <strong>
           ${escapeHTML(product.name)}
         </strong>
@@ -120,10 +117,8 @@ function renderOrder() {
             ${formatPrice(subtotal)}
           </strong>
         </div>
-
       </div>
     `;
-
   }).join("");
 
   productsTotal.textContent =
@@ -209,9 +204,7 @@ async function createOrder() {
         p => p.id === item.id
       );
 
-    if (!product) {
-      return null;
-    }
+    if (!product) return null;
 
     return {
       product_id: product.id,
@@ -266,31 +259,64 @@ async function createOrder() {
       await response.json();
 
     if (!response.ok || !result.ok) {
-
       throw new Error(
         result.error ||
         "ثبت سفارش انجام نشد."
       );
     }
 
+    payButton.textContent =
+      "⏳ انتقال به زرین‌پال...";
+
+    const paymentResponse =
+      await fetch(
+        ZARINPAL_CREATE_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            "Authorization":
+              `Bearer ${token}`,
+
+            "apikey":
+              SUPABASE_KEY
+          },
+
+          body: JSON.stringify({
+            order_id:
+              result.order.id
+          })
+        }
+      );
+
+    const payment =
+      await paymentResponse.json();
+
+    if (
+      !paymentResponse.ok ||
+      !payment.ok ||
+      !payment.payment_url
+    ) {
+      throw new Error(
+        payment.error ||
+        "ایجاد درگاه پرداخت انجام نشد."
+      );
+    }
+
+    showMessage(
+      "در حال انتقال به درگاه زرین‌پال...",
+      "success"
+    );
+
     localStorage.removeItem(
       "moghayesechi_cart"
     );
 
-    showMessage(
-      "✅ سفارش ثبت شد. درگاه پرداخت هنوز فعال نشده است؛ بنابراین هیچ پرداختی انجام نشد.",
-      "success"
-    );
-
-    payButton.textContent =
-      "✅ سفارش ثبت شد";
-
-    setTimeout(() => {
-
-      location.href =
-        "index.html";
-
-    }, 2500);
+    window.location.href =
+      payment.payment_url;
 
   } catch (error) {
 
@@ -303,7 +329,7 @@ async function createOrder() {
     payButton.disabled = false;
 
     payButton.textContent =
-      "💳 ادامه برای پرداخت";
+      "💳 پرداخت با زرین‌پال";
   }
 }
 
