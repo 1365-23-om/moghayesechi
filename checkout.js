@@ -1,57 +1,40 @@
-const SUPABASE_URL =
-  "https://evvdggckoalesyyyqhqm.supabase.co";
-
+const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
 const SUPABASE_KEY =
   "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
-const CREATE_ORDER_URL =
-  `${SUPABASE_URL}/functions/v1/create-order`;
+const TEST_CHECKOUT_URL =
+  `${SUPABASE_URL}/functions/v1/test-checkout`;
 
-const ZARINPAL_CREATE_URL =
-  `${SUPABASE_URL}/functions/v1/zarinpal-create`;
+const fullNameInput = document.getElementById("fullName");
+const phoneInput = document.getElementById("phone");
+const addressInput = document.getElementById("address");
 
-const fullNameInput =
-  document.getElementById("fullName");
+const orderItems = document.getElementById("orderItems");
+const productsTotal = document.getElementById("productsTotal");
+const orderTotal = document.getElementById("orderTotal");
 
-const phoneInput =
-  document.getElementById("phone");
-
-const addressInput =
-  document.getElementById("address");
-
-const orderItems =
-  document.getElementById("orderItems");
-
-const productsTotal =
-  document.getElementById("productsTotal");
-
-const orderTotal =
-  document.getElementById("orderTotal");
-
-const acceptRules =
-  document.getElementById("acceptRules");
-
-const payButton =
-  document.getElementById("payButton");
-
-const backButton =
-  document.getElementById("backButton");
-
-const message =
-  document.getElementById("message");
+const acceptRules = document.getElementById("acceptRules");
+const payButton = document.getElementById("payButton");
+const backButton = document.getElementById("backButton");
+const message = document.getElementById("message");
 
 let cart = JSON.parse(
   localStorage.getItem("moghayesechi_cart") || "[]"
 );
 
+// -------------------------
+// Helpers
+// -------------------------
+
 function showMessage(text, type = "error") {
+  if (!message) return;
+
   message.textContent = text;
   message.className = type;
 }
 
 function formatPrice(price) {
-  return Number(price || 0)
-    .toLocaleString("fa-IR") + " تومان";
+  return Number(price || 0).toLocaleString("fa-IR") + " تومان";
 }
 
 function escapeHTML(value) {
@@ -63,286 +46,286 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 }
 
+// -------------------------
+// Render cart
+// -------------------------
+
 function renderOrder() {
+  if (!orderItems || !productsTotal || !orderTotal) return;
+
   if (!cart.length) {
     orderItems.innerHTML =
       "<p>🛒 سبد خرید خالی است.</p>";
 
-    payButton.disabled = true;
+    if (payButton) {
+      payButton.disabled = true;
+    }
 
-    productsTotal.textContent =
-      "۰ تومان";
-
-    orderTotal.textContent =
-      "۰ تومان";
+    productsTotal.textContent = "۰ تومان";
+    orderTotal.textContent = "۰ تومان";
 
     return;
   }
 
   let total = 0;
 
-  orderItems.innerHTML = cart.map(item => {
-    const product =
-      products.find(p => p.id === item.id);
+  orderItems.innerHTML = cart
+    .map((item) => {
+      const product =
+        typeof products !== "undefined"
+          ? products.find((p) => p.id === item.id)
+          : null;
 
-    if (!product) return "";
+      if (!product) return "";
 
-    const quantity =
-      Number(item.qty || 1);
+      const quantity = Number(item.qty || 1);
+      const subtotal =
+        Number(product.price || 0) * quantity;
 
-    const subtotal =
-      Number(product.price) * quantity;
+      total += subtotal;
 
-    total += subtotal;
+      return `
+        <div class="product">
+          <strong>${escapeHTML(product.name)}</strong>
 
-    return `
-      <div class="product">
-        <strong>
-          ${escapeHTML(product.name)}
-        </strong>
+          <div>
+            تعداد:
+            ${quantity.toLocaleString("fa-IR")}
+          </div>
 
-        <div>
-          تعداد:
-          ${quantity.toLocaleString("fa-IR")}
+          <div>
+            قیمت واحد:
+            ${formatPrice(product.price)}
+          </div>
+
+          <div>
+            مبلغ:
+            <strong>${formatPrice(subtotal)}</strong>
+          </div>
         </div>
+      `;
+    })
+    .join("");
 
-        <div>
-          قیمت واحد:
-          ${formatPrice(product.price)}
-        </div>
-
-        <div>
-          مبلغ:
-          <strong>
-            ${formatPrice(subtotal)}
-          </strong>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  productsTotal.textContent =
-    formatPrice(total);
-
-  orderTotal.textContent =
-    formatPrice(total);
+  productsTotal.textContent = formatPrice(total);
+  orderTotal.textContent = formatPrice(total);
 }
 
-async function createOrder() {
+// -------------------------
+// Create test order
+// -------------------------
 
+async function createOrder() {
   const fullName =
-    fullNameInput.value.trim();
+    fullNameInput?.value.trim() || "";
 
   const phone =
-    phoneInput.value.trim();
+    phoneInput?.value.trim() || "";
 
   const address =
-    addressInput.value.trim();
+    addressInput?.value.trim() || "";
 
+  // Name
   if (!fullName) {
     showMessage(
       "نام و نام خانوادگی را وارد کنید."
     );
-    fullNameInput.focus();
+
+    fullNameInput?.focus();
     return;
   }
 
-  if (!phone) {
-    showMessage(
-      "شماره موبایل را وارد کنید."
-    );
-    phoneInput.focus();
-    return;
-  }
-
+  // Phone
   if (!/^09\d{9}$/.test(phone)) {
     showMessage(
       "شماره موبایل باید مانند 09123456789 باشد."
     );
-    phoneInput.focus();
+
+    phoneInput?.focus();
     return;
   }
 
+  // Address
   if (!address) {
     showMessage(
       "آدرس تحویل را وارد کنید."
     );
-    addressInput.focus();
+
+    addressInput?.focus();
     return;
   }
 
+  // Cart
   if (!cart.length) {
     showMessage(
       "سبد خرید خالی است."
     );
+
     return;
   }
 
-  if (!acceptRules.checked) {
+  // Rules
+  if (
+    acceptRules &&
+    !acceptRules.checked
+  ) {
     showMessage(
       "لطفاً قوانین و مقررات را بپذیرید."
     );
+
     return;
   }
 
-  const token =
-    localStorage.getItem(
-      "supabase_access_token"
-    );
+  // Login token
+  const token = localStorage.getItem(
+    "supabase_access_token"
+  );
 
   if (!token) {
     showMessage(
       "ابتدا وارد حساب کاربری شوید."
     );
+
     return;
   }
 
-  const items = cart.map(item => {
+  // Prepare items
+  const items = cart
+    .map((item) => {
+      const product =
+        typeof products !== "undefined"
+          ? products.find(
+              (p) => p.id === item.id
+            )
+          : null;
 
-    const product =
-      products.find(
-        p => p.id === item.id
-      );
+      if (!product) return null;
 
-    if (!product) return null;
-
-    return {
-      product_id: product.id,
-      product_name: product.name,
-      unit_price: product.price,
-      quantity: Number(item.qty || 1)
-    };
-
-  }).filter(Boolean);
+      return {
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: Number(product.price || 0),
+        quantity: Number(item.qty || 1)
+      };
+    })
+    .filter(Boolean);
 
   if (!items.length) {
     showMessage(
       "محصول معتبر در سبد خرید پیدا نشد."
     );
+
     return;
   }
 
-  payButton.disabled = true;
-
-  payButton.textContent =
-    "⏳ در حال ثبت سفارش...";
+  // Disable button
+  if (payButton) {
+    payButton.disabled = true;
+    payButton.textContent =
+      "⏳ در حال ثبت سفارش...";
+  }
 
   try {
+    const response = await fetch(
+      TEST_CHECKOUT_URL,
+      {
+        method: "POST",
 
-    const response =
-      await fetch(
-        CREATE_ORDER_URL,
-        {
-          method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "apikey": SUPABASE_KEY
+        },
 
-          headers: {
-            "Content-Type":
-              "application/json",
+        body: JSON.stringify({
+          name: fullName,
+          phone: phone,
+          address: address,
+          items: items
+        })
+      }
+    );
 
-            "Authorization":
-              `Bearer ${token}`,
+    let result;
 
-            "apikey":
-              SUPABASE_KEY
-          },
-
-          body: JSON.stringify({
-            full_name: fullName,
-            phone: phone,
-            address: address,
-            items: items
-          })
-        }
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error(
+        "پاسخ نامعتبر از سرور دریافت شد."
       );
-
-    const result =
-      await response.json();
+    }
 
     if (!response.ok || !result.ok) {
       throw new Error(
         result.error ||
-        "ثبت سفارش انجام نشد."
+          "ثبت سفارش انجام نشد."
       );
     }
 
-    payButton.textContent =
-      "⏳ انتقال به زرین‌پال...";
-
-    const paymentResponse =
-      await fetch(
-        ZARINPAL_CREATE_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            "Authorization":
-              `Bearer ${token}`,
-
-            "apikey":
-              SUPABASE_KEY
-          },
-
-          body: JSON.stringify({
-            order_id:
-              result.order.id
-          })
-        }
-      );
-
-    const payment =
-      await paymentResponse.json();
-
-    if (
-      !paymentResponse.ok ||
-      !payment.ok ||
-      !payment.payment_url
-    ) {
-      throw new Error(
-        payment.error ||
-        "ایجاد درگاه پرداخت انجام نشد."
-      );
-    }
-
-    showMessage(
-      "در حال انتقال به درگاه زرین‌پال...",
-      "success"
-    );
-
+    // Clear cart after successful order creation
     localStorage.removeItem(
       "moghayesechi_cart"
     );
 
+    /*
+      Edge Function باید payment_url
+      را برگرداند.
+    */
+
+    if (!result.payment_url) {
+      throw new Error(
+        "لینک پرداخت از سرور دریافت نشد."
+      );
+    }
+
+    // Redirect to payment/test checkout
     window.location.href =
-      payment.payment_url;
+      result.payment_url;
 
   } catch (error) {
-
-    console.error(error);
-
-    showMessage(
-      "❌ " + error.message
+    console.error(
+      "Checkout Error:",
+      error
     );
 
-    payButton.disabled = false;
+    showMessage(
+      "❌ " +
+        (error.message ||
+          "خطا در ثبت سفارش")
+    );
 
-    payButton.textContent =
-      "💳 پرداخت با زرین‌پال";
+    if (payButton) {
+      payButton.disabled = false;
+      payButton.textContent =
+        "💳 پرداخت آزمایشی";
+    }
   }
 }
 
-payButton.addEventListener(
-  "click",
-  createOrder
-);
+// -------------------------
+// Events
+// -------------------------
 
-backButton.addEventListener(
-  "click",
-  () => {
-    location.href = "index.html";
-  }
-);
+if (payButton) {
+  payButton.addEventListener(
+    "click",
+    createOrder
+  );
+}
+
+if (backButton) {
+  backButton.addEventListener(
+    "click",
+    () => {
+      window.location.href =
+        "index.html";
+    }
+  );
+}
+
+// -------------------------
+// Initial render
+// -------------------------
 
 renderOrder();
