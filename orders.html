@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>سفارش‌های من | مقایسه‌چی</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 18px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .order {
+      background: white;
+      border-radius: 16px;
+      margin-bottom: 18px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.06);
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 14px;
+      margin-bottom: 15px;
+    }
+
+    .order-id {
+      font-size: 13px;
+      color: #6b7280;
+      word-break: break-all;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .paid {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .cancelled,
+    .failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .unknown {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .info div {
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .items {
+      margin-top: 15px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    .total {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 15px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .loading,
+    .empty,
+    .error {
+      background: white;
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 5px 20px rgba(0,0,0,.06);
+    }
+
+    .error {
+      color: #991b1b;
+    }
+
+    @media (max-width: 600px) {
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .info {
+        grid-template-columns: 1fr;
+      }
+
+      .order-header {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>📦 سفارش‌های من</h1>
+</header>
+
+<main class="container">
+
+  <div class="toolbar">
+    <a
+      class="button secondary"
+      href="index.html"
+    >
+      ← بازگشت به فروشگاه
+    </a>
+
+    <button
+      id="refreshButton"
+      class="button primary"
+    >
+      🔄 بروزرسانی
+    </button>
+  </div>
+
+  <div id="loading" class="loading">
+    در حال دریافت سفارش‌ها...
+  </div>
+
+  <div id="error" class="error" style="display:none;">
+  </div>
+
+  <div id="empty" class="empty" style="display:none;">
+    <h2>هنوز سفارشی ندارید</h2>
+
+    <p>
+      می‌توانید از فروشگاه مقایسه‌چی خرید خود را شروع کنید.
+    </p>
+
+    <a
+      class="button primary"
+      href="index.html"
+    >
+      مشاهده محصولات
+    </a>
+  </div>
+
+  <div id="orders"></div>
+
+</main>
+
+<script src="orders.js"></script>
+
+<script>
+  const loading =
+    document.getElementById("loading");
+
+  const errorBox =
+    document.getElementById("error");
+
+  const emptyBox =
+    document.getElementById("empty");
+
+  const ordersBox =
+    document.getElementById("orders");
+
+  const refreshButton =
+    document.getElementById("refreshButton");
+
+
+  function escapeHTML(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  function formatPrice(value) {
+
+    const number =
+      Number(value || 0);
+
+    return number.toLocaleString("fa-IR")
+      + " تومان";
+
+  }
+
+
+  function statusText(status) {
+
+    const map = {
+
+      paid: "پرداخت شده",
+
+      pending: "در انتظار پرداخت",
+
+      cancelled: "لغو شده",
+
+      failed: "پرداخت ناموفق",
+
+      processing: "در حال پردازش"
+
+    };
+
+    return map[status] || "نامشخص";
+
+  }
+
+
+  function statusClass(status) {
+
+    if (status === "paid") {
+      return "paid";
+    }
+
+    if (
+      status === "pending" ||
+      status === "processing"
+    ) {
+      return "pending";
+    }
+
+    if (
+      status === "cancelled" ||
+      status === "failed"
+    ) {
+      return "failed";
+    }
+
+    return "unknown";
+
+  }
+
+
+  function renderOrders(data) {
+
+    const list =
+      Array.isArray(data)
+        ? data
+        : data?.orders || [];
+
+    loading.style.display = "none";
+
+    if (!list.length) {
+
+      emptyBox.style.display =
+        "block";
+
+      return;
+    }
+
+
+    ordersBox.innerHTML =
+      list.map(order => {
+
+        const items =
+          order.items ||
+          order.order_items ||
+          [];
+
+        const itemsHTML =
+          items.map(item => {
+
+            const name =
+              item.product_name ||
+              item.name ||
+              "محصول";
+
+            const quantity =
+              Number(
+                item.quantity ||
+                item.qty ||
+                1
+              );
+
+            const price =
+              Number(
+                item.unit_price ||
+                item.price ||
+                0
+              );
+
+            return `
+              <div class="item">
+                <span>
+                  ${escapeHTML(name)}
+                  × ${quantity.toLocaleString("fa-IR")}
+                </span>
+
+                <strong>
+                  ${formatPrice(
+                    price * quantity
+                  )}
+                </strong>
+              </div>
+            `;
+
+          }).join("");
+
+
+        const created =
+          order.created_at
+            ? new Date(
+                order.created_at
+              ).toLocaleString("fa-IR")
+            : "-";
+
+
+        return `
+          <article class="order">
+
+            <div class="order-header">
+
+              <div>
+                <strong>
+                  سفارش
+                </strong>
+
+                <div class="order-id">
+                  ${escapeHTML(
+                    order.id || "-"
+                  )}
+                </div>
+              </div>
+
+              <span class="status ${statusClass(
+                order.status
+              )}">
+                ${statusText(
+                  order.status
+                )}
+              </span>
+
+            </div>
+
+
+            <div class="info">
+
+              <div>
+                👤 نام:
+                <strong>
+                  ${escapeHTML(
+                    order.full_name ||
+                    order.customer_name ||
+                    "-"
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                📅 تاریخ:
+                <strong>
+                  ${escapeHTML(created)}
+                </strong>
+              </div>
+
+              <div>
+                📱 موبایل:
+                <strong>
+                  ${escapeHTML(
+                    order.phone || "-"
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                💳 وضعیت:
+                <strong>
+                  ${statusText(
+                    order.status
+                  )}
+                </strong>
+              </div>
+
+            </div>
+
+
+            <div class="items">
+
+              ${
+                itemsHTML ||
+                "<p>جزئیات محصول ثبت نشده است.</p>"
+              }
+
+            </div>
+
+
+            <div class="total">
+
+              <span>
+                مبلغ کل
+              </span>
+
+              <span>
+                ${formatPrice(
+                  order.total_amount
+                )}
+              </span>
+
+            </div>
+
+          </article>
+        `;
+
+      }).join("");
+
+  }
+
+
+  async function loadOrders() {
+
+    loading.style.display =
+      "block";
+
+    errorBox.style.display =
+      "none";
+
+    emptyBox.style.display =
+      "none";
+
+    ordersBox.innerHTML = "";
+
+
+    try {
+
+      /*
+       * orders.js مسئول دریافت
+       * سفارش‌ها از Supabase است.
+       */
+
+      if (
+        typeof loadMyOrders !==
+        "function"
+      ) {
+
+        throw new Error(
+          "تابع دریافت سفارش‌ها پیدا نشد."
+        );
+
+      }
+
+
+      const result =
+        await loadMyOrders();
+
+
+      renderOrders(result);
+
+    } catch (error) {
+
+      console.error(error);
+
+      loading.style.display =
+        "none";
+
+      errorBox.textContent =
+        "خطا در دریافت سفارش‌ها: "
+        + error.message;
+
+      errorBox.style.display =
+        "block";
+
+    }
+
+  }
+
+
+  refreshButton.addEventListener(
+    "click",
+    loadOrders
+  );
+
+
+  loadOrders();
+</script>
+
+</body>
+</html>
