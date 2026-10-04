@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>نتیجه پرداخت | مقایسه‌چی</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+    }
+
+    .icon {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+    }
+
+    .success .icon {
+      background: #dcfce7;
+    }
+
+    .failed .icon,
+    .cancelled .icon,
+    .error .icon,
+    .invalid .icon,
+    .not_found .icon {
+      background: #fee2e2;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 25px;
+    }
+
+    p {
+      line-height: 1.9;
+      color: #6b7280;
+      margin: 8px 0;
+    }
+
+    .order-box {
+      margin-top: 22px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      text-align: right;
+    }
+
+    .order-box strong {
+      color: #111827;
+      word-break: break-all;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .button {
+      flex: 1;
+      border: 0;
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loading {
+      color: #6b7280;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 28px 18px;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <!-- موفق -->
+    <section
+      id="success"
+      class="card success hidden"
+    >
+      <div class="icon">✓</div>
+
+      <h1>پرداخت با موفقیت انجام شد</h1>
+
+      <p>
+        پرداخت شما با موفقیت تأیید شد.
+      </p>
+
+      <div class="order-box">
+        <p>
+          شماره سفارش:
+          <strong id="successOrderId">-</strong>
+        </p>
+      </div>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="orders.html"
+        >
+          مشاهده سفارش‌ها
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          بازگشت به فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- ناموفق -->
+    <section
+      id="failed"
+      class="card failed hidden"
+    >
+      <div class="icon">×</div>
+
+      <h1>پرداخت انجام نشد</h1>
+
+      <p>
+        پرداخت توسط زرین‌پال تأیید نشد.
+        مبلغی به عنوان پرداخت موفق برای این سفارش ثبت نشده است.
+      </p>
+
+      <div class="order-box">
+        <p>
+          شماره سفارش:
+          <strong id="failedOrderId">-</strong>
+        </p>
+      </div>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="checkout.html"
+        >
+          بازگشت به پرداخت
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          بازگشت به فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- لغو -->
+    <section
+      id="cancelled"
+      class="card cancelled hidden"
+    >
+      <div class="icon">!</div>
+
+      <h1>پرداخت لغو شد</h1>
+
+      <p>
+        پرداخت را لغو کردید یا تراکنش توسط درگاه تکمیل نشد.
+      </p>
+
+      <div class="order-box">
+        <p>
+          شماره سفارش:
+          <strong id="cancelledOrderId">-</strong>
+        </p>
+      </div>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="checkout.html"
+        >
+          بازگشت به پرداخت
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          بازگشت به فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- سفارش پیدا نشد -->
+    <section
+      id="not_found"
+      class="card not_found hidden"
+    >
+      <div class="icon">?</div>
+
+      <h1>سفارش پیدا نشد</h1>
+
+      <p>
+        سفارش مربوط به این تراکنش پیدا نشد.
+      </p>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="index.html"
+        >
+          بازگشت به فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- تراکنش نامعتبر -->
+    <section
+      id="invalid"
+      class="card invalid hidden"
+    >
+      <div class="icon">!</div>
+
+      <h1>تراکنش نامعتبر است</h1>
+
+      <p>
+        اطلاعات تراکنش با سفارش مطابقت ندارد.
+      </p>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="orders.html"
+        >
+          سفارش‌های من
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- خطا -->
+    <section
+      id="error"
+      class="card error hidden"
+    >
+      <div class="icon">!</div>
+
+      <h1>خطایی رخ داد</h1>
+
+      <p>
+        هنگام بررسی نتیجه پرداخت مشکلی رخ داد.
+        لطفاً وضعیت سفارش خود را بررسی کنید.
+      </p>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="orders.html"
+        >
+          بررسی سفارش‌ها
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          بازگشت به فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- وضعیت نامشخص -->
+    <section
+      id="unknown"
+      class="card hidden"
+    >
+      <div class="icon">?</div>
+
+      <h1>وضعیت پرداخت مشخص نیست</h1>
+
+      <p>
+        نتیجه پرداخت دریافت نشد.
+        لطفاً سفارش‌های خود را بررسی کنید.
+      </p>
+
+      <div class="buttons">
+
+        <a
+          class="button primary"
+          href="orders.html"
+        >
+          سفارش‌های من
+        </a>
+
+        <a
+          class="button secondary"
+          href="index.html"
+        >
+          فروشگاه
+        </a>
+
+      </div>
+    </section>
+
+
+    <!-- بارگذاری -->
+    <section
+      id="loading"
+      class="card"
+    >
+      <h1>در حال بررسی پرداخت...</h1>
+
+      <p class="loading">
+        لطفاً چند لحظه صبر کنید.
+      </p>
+    </section>
+
+  </main>
+
+
+  <script>
+    (function () {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const result =
+        params.get("result");
+
+      const orderId =
+        params.get("order_id");
+
+
+      const loading =
+        document.getElementById("loading");
+
+      const sections = [
+        "success",
+        "failed",
+        "cancelled",
+        "not_found",
+        "invalid",
+        "error",
+        "unknown"
+      ];
+
+
+      function hideAll() {
+
+        sections.forEach(function (id) {
+
+          const element =
+            document.getElementById(id);
+
+          if (element) {
+            element.classList.add("hidden");
+          }
+
+        });
+
+        loading.classList.add("hidden");
+      }
+
+
+      function setOrderId(id, value) {
+
+        const element =
+          document.getElementById(id);
+
+        if (element) {
+          element.textContent =
+            value || "-";
+        }
+
+      }
+
+
+      hideAll();
+
+
+      if (result === "success") {
+
+        setOrderId(
+          "successOrderId",
+          orderId
+        );
+
+        document
+          .getElementById("success")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (result === "failed") {
+
+        setOrderId(
+          "failedOrderId",
+          orderId
+        );
+
+        document
+          .getElementById("failed")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (result === "cancelled") {
+
+        setOrderId(
+          "cancelledOrderId",
+          orderId
+        );
+
+        document
+          .getElementById("cancelled")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (result === "not_found") {
+
+        document
+          .getElementById("not_found")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (result === "invalid") {
+
+        document
+          .getElementById("invalid")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (result === "error") {
+
+        document
+          .getElementById("error")
+          .classList.remove("hidden");
+
+        return;
+      }
+
+
+      document
+        .getElementById("unknown")
+        .classList.remove("hidden");
+
+    })();
+  </script>
+
+</body>
+</html>
