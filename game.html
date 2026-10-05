@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>سکه‌چی | بازی</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      background: #f4f6fb;
+    }
+
+    .game-page {
+      max-width: 520px;
+      margin: auto;
+      padding: 20px 14px 90px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 8px 28px rgba(0,0,0,.08);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    .stat {
+      font-weight: bold;
+    }
+
+    .target {
+      width: 150px;
+      height: 150px;
+      border: 0;
+      border-radius: 50%;
+      font-size: 64px;
+      background: #ffd766;
+      cursor: pointer;
+      margin: 25px auto;
+      display: block;
+    }
+
+    .target:active {
+      transform: scale(.95);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #startButton {
+      background: #111827;
+      color: white;
+    }
+
+    #saveButton {
+      background: #e9edf5;
+      color: #172033;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .game-message {
+      min-height: 28px;
+      margin-top: 18px;
+      font-weight: bold;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 15px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="game-page">
+
+  <a class="back" href="index.html">
+    ← بازگشت به فروشگاه
+  </a>
+
+  <div class="game-card">
+
+    <h1>🎮 سکه‌چی</h1>
+
+    <div class="stats">
+
+      <div class="stat">
+        🪙
+        <span id="coins">0</span>
+      </div>
+
+      <div class="stat">
+        ⚡
+        <span id="energy">20</span>
+      </div>
+
+      <div class="stat">
+        🎯
+        <span id="score">0</span>
+      </div>
+
+    </div>
+
+    <p>
+      روی هدف بزن و امتیاز بگیر.
+    </p>
+
+    <button
+      id="target"
+      class="target"
+      disabled
+    >
+      🎯
+    </button>
+
+    <div class="actions">
+
+      <button id="startButton">
+        شروع بازی
+      </button>
+
+      <button
+        id="saveButton"
+        disabled
+      >
+        💾 پایان و ذخیره
+      </button>
+
+    </div>
+
+    <div
+      id="gameMessage"
+      class="game-message"
+    ></div>
+
+  </div>
+
+</main>
+
+<script src="game.js"></script>
+
+</body>
+</html>
