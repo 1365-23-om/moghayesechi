@@ -5,107 +5,23 @@ const SUPABASE_KEY =
   "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
 const GAME_URL =
-  `${SUPABASE_URL}/functions/v1/sekkechi-game`;
+  SUPABASE_URL + "/functions/v1/sekkechi-game";
+
 
 const coinsEl = document.getElementById("coins");
 const energyEl = document.getElementById("energy");
 const scoreEl = document.getElementById("score");
+
 const target = document.getElementById("target");
 const startButton = document.getElementById("startButton");
 const saveButton = document.getElementById("saveButton");
+
 const message = document.getElementById("gameMessage");
+
 
 let score = 0;
 let playing = false;
 
-
-// ================================
-// دریافت Session
-// ================================
-
-async function getSession() {
-
-  try {
-
-    const response = await fetch(
-      `${SUPABASE_URL}/auth/v1/user`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY
-        }
-      }
-    );
-
-    return response.ok;
-
-  } catch (error) {
-
-    console.error(error);
-
-    return false;
-
-  }
-}
-
-
-// ================================
-// دریافت Token
-// ================================
-
-function getAccessToken() {
-
-  const keys = [
-    "supabase_access_token",
-    "access_token",
-    "sb-access-token"
-  ];
-
-  for (const key of keys) {
-
-    const value =
-      localStorage.getItem(key);
-
-    if (value) {
-      return value;
-    }
-  }
-
-  // جستجوی Sessionهای Supabase
-  for (let i = 0; i < localStorage.length; i++) {
-
-    const key =
-      localStorage.key(i);
-
-    if (!key) continue;
-
-    if (
-      key.includes("auth-token") ||
-      key.includes("supabase")
-    ) {
-
-      try {
-
-        const data =
-          JSON.parse(
-            localStorage.getItem(key)
-          );
-
-        const token =
-          data?.access_token ||
-          data?.currentSession?.access_token;
-
-        if (token) {
-          return token;
-        }
-
-      } catch (e) {
-        // مقدار JSON نیست
-      }
-    }
-  }
-
-  return null;
-}
 
 // ================================
 // پیام
@@ -121,74 +37,173 @@ function showMessage(text) {
 
 
 // ================================
+// پیدا کردن توکن
+// ================================
+
+function getToken() {
+
+  const directKeys = [
+    "supabase_access_token",
+    "access_token",
+    "sb-access-token"
+  ];
+
+  for (const key of directKeys) {
+
+    const token =
+      localStorage.getItem(key);
+
+    if (token) {
+      return token;
+    }
+
+  }
+
+
+  // بررسی کلیدهای Supabase
+  for (
+    let i = 0;
+    i < localStorage.length;
+    i++
+  ) {
+
+    const key =
+      localStorage.key(i);
+
+    if (!key) continue;
+
+
+    const raw =
+      localStorage.getItem(key);
+
+    if (!raw) continue;
+
+
+    try {
+
+      const data =
+        JSON.parse(raw);
+
+
+      if (
+        data &&
+        data.access_token
+      ) {
+
+        return data.access_token;
+
+      }
+
+
+      if (
+        data &&
+        data.currentSession &&
+        data.currentSession.access_token
+      ) {
+
+        return data.currentSession.access_token;
+
+      }
+
+    } catch (error) {
+
+      // JSON نبود، ادامه بده
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+// ================================
+// بررسی اولیه صفحه
+// ================================
+
+showMessage(
+  "🎮 سکه‌چی آماده است."
+);
+
+
+// ================================
 // شروع بازی
 // ================================
 
-startButton.addEventListener(
-  "click",
-  async () => {
+if (startButton) {
 
-    const token = getAccessToken();
+  startButton.addEventListener(
+    "click",
+    function () {
 
-    if (!token) {
+      score = 0;
+
+      playing = true;
+
+
+      scoreEl.textContent = "0";
+
+
+      target.disabled = false;
+
+      saveButton.disabled = false;
+
+      startButton.disabled = true;
+
 
       showMessage(
-        "❌ ابتدا وارد حساب کاربری شوید."
+        "🎯 بازی شروع شد!"
       );
 
-      return;
     }
+  );
 
-    score = 0;
-    playing = true;
-
-    scoreEl.textContent = "0";
-
-    target.disabled = false;
-    saveButton.disabled = false;
-    startButton.disabled = true;
-
-    showMessage(
-      "🎯 بازی شروع شد!"
-    );
-
-  }
-);
+}
 
 
 // ================================
-// کلیک روی هدف
+// هدف بازی
 // ================================
 
-target.addEventListener(
-  "click",
-  () => {
+if (target) {
 
-    if (!playing) {
-      return;
+  target.addEventListener(
+    "click",
+    function () {
+
+      if (!playing) {
+        return;
+      }
+
+
+      score++;
+
+
+      scoreEl.textContent =
+        score.toLocaleString("fa-IR");
+
     }
+  );
 
-    score++;
-
-    scoreEl.textContent =
-      score.toLocaleString("fa-IR");
-
-  }
-);
+}
 
 
 // ================================
-// ذخیره بازی
+// ذخیره نتیجه
 // ================================
 
 async function saveGame() {
 
-  const token = getAccessToken();
+  const token =
+    getToken();
+
 
   if (!token) {
 
     showMessage(
-      "❌ کاربر وارد نشده است."
+      "⚠️ بازی انجام شد، اما ورود کاربر برای ذخیره لازم است."
     );
 
     saveButton.disabled = false;
@@ -200,140 +215,35 @@ async function saveGame() {
 
   saveButton.disabled = true;
 
+
   showMessage(
-    "⏳ در حال ذخیره نتیجه..."
+    "⏳ در حال ذخیره..."
   );
 
 
   try {
 
-    const response = await fetch(
-      GAME_URL,
-      {
-        method: "POST",
+    const response =
+      await fetch(
+        GAME_URL,
+        {
+          method: "POST",
 
-        headers: {
+          headers: {
 
-          "Content-Type":
-            "application/json",
+            "Content-Type":
+              "application/json",
 
-          "apikey":
-            SUPABASE_KEY,
+            "apikey":
+              SUPABASE_KEY,
 
-          "Authorization":
-            `Bearer ${token}`
+            "Authorization":
+              "Bearer " + token
 
-        },
+          },
 
-        body: JSON.stringify({
-          score: score
-        })
+          body: JSON.stringify({
+            score: score
+          })
 
-      }
-    );
-
-
-    const result =
-      await response.json();
-
-
-    console.log(
-      "Sekkechi result:",
-      result
-    );
-
-
-    if (
-      !response.ok ||
-      !result.ok
-    ) {
-
-      throw new Error(
-        result.error ||
-        "ذخیره بازی انجام نشد"
-      );
-
-    }
-
-
-    // ==========================
-    // موفقیت
-    // ==========================
-
-    coinsEl.textContent =
-      Number(
-        result.coin_balance
-      ).toLocaleString("fa-IR");
-
-
-    score = 0;
-
-    scoreEl.textContent = "0";
-
-    playing = false;
-
-    target.disabled = true;
-
-    startButton.disabled = false;
-
-
-    showMessage(
-      `✅ بازی ذخیره شد | ` +
-      `+${result.coins_earned} 🪙 | ` +
-      `موجودی: ${result.coin_balance} 🪙 | ` +
-      `سطح ${result.level}`
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Game save error:",
-      error
-    );
-
-
-    showMessage(
-      "❌ " +
-      (
-        error.message ||
-        "خطا در ذخیره بازی"
-      )
-    );
-
-
-    saveButton.disabled = false;
-
-  }
-
-}
-
-
-// ================================
-// پایان و ذخیره
-// ================================
-
-saveButton.addEventListener(
-  "click",
-  async () => {
-
-    if (!playing || score <= 0) {
-
-      showMessage(
-        "ابتدا بازی کنید و امتیاز بگیرید."
-      );
-
-      return;
-
-    }
-
-
-    playing = false;
-
-    target.disabled = true;
-
-
-    await saveGame();
-
-  }
-);
+       
