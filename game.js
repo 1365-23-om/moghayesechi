@@ -7,67 +7,84 @@ const SUPABASE_KEY =
 const GAME_URL =
   `${SUPABASE_URL}/functions/v1/sekkechi-game`;
 
-
-const coinsEl =
-  document.getElementById("coins");
-
-const energyEl =
-  document.getElementById("energy");
-
-const scoreEl =
-  document.getElementById("score");
-
-const target =
-  document.getElementById("target");
-
-const startButton =
-  document.getElementById("startButton");
-
-const saveButton =
-  document.getElementById("saveButton");
-
-const message =
-  document.getElementById("gameMessage");
-
+const coinsEl = document.getElementById("coins");
+const energyEl = document.getElementById("energy");
+const scoreEl = document.getElementById("score");
+const target = document.getElementById("target");
+const startButton = document.getElementById("startButton");
+const saveButton = document.getElementById("saveButton");
+const message = document.getElementById("gameMessage");
 
 let score = 0;
 let playing = false;
 
 
-// --------------------------------
-// دریافت Token کاربر
-// --------------------------------
+// ================================
+// دریافت Session
+// ================================
+
+async function getSession() {
+
+  try {
+
+    const response = await fetch(
+      `${SUPABASE_URL}/auth/v1/user`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY
+        }
+      }
+    );
+
+    return response.ok;
+
+  } catch (error) {
+
+    console.error(error);
+
+    return false;
+
+  }
+}
+
+
+// ================================
+// دریافت Token
+// ================================
 
 function getAccessToken() {
 
-  return localStorage.getItem(
-    "supabase_access_token"
+  return (
+    localStorage.getItem("supabase_access_token") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("sb-access-token")
   );
 
 }
 
 
-// --------------------------------
-// نمایش پیام
-// --------------------------------
+// ================================
+// پیام
+// ================================
 
 function showMessage(text) {
 
-  message.textContent = text;
+  if (message) {
+    message.textContent = text;
+  }
 
 }
 
 
-// --------------------------------
+// ================================
 // شروع بازی
-// --------------------------------
+// ================================
 
 startButton.addEventListener(
   "click",
-  () => {
+  async () => {
 
-    const token =
-      getAccessToken();
+    const token = getAccessToken();
 
     if (!token) {
 
@@ -78,21 +95,14 @@ startButton.addEventListener(
       return;
     }
 
-
     score = 0;
-
     playing = true;
-
 
     scoreEl.textContent = "0";
 
-
     target.disabled = false;
-
     saveButton.disabled = false;
-
     startButton.disabled = true;
-
 
     showMessage(
       "🎯 بازی شروع شد!"
@@ -102,9 +112,9 @@ startButton.addEventListener(
 );
 
 
-// --------------------------------
+// ================================
 // کلیک روی هدف
-// --------------------------------
+// ================================
 
 target.addEventListener(
   "click",
@@ -114,9 +124,7 @@ target.addEventListener(
       return;
     }
 
-
     score++;
-
 
     scoreEl.textContent =
       score.toLocaleString("fa-IR");
@@ -125,15 +133,13 @@ target.addEventListener(
 );
 
 
-// --------------------------------
-// ذخیره نتیجه
-// --------------------------------
+// ================================
+// ذخیره بازی
+// ================================
 
 async function saveGame() {
 
-  const token =
-    getAccessToken();
-
+  const token = getAccessToken();
 
   if (!token) {
 
@@ -141,12 +147,14 @@ async function saveGame() {
       "❌ کاربر وارد نشده است."
     );
 
+    saveButton.disabled = false;
+
     return;
+
   }
 
 
   saveButton.disabled = true;
-
 
   showMessage(
     "⏳ در حال ذخیره نتیجه..."
@@ -155,35 +163,40 @@ async function saveGame() {
 
   try {
 
-    const response =
-      await fetch(
-        GAME_URL,
-        {
-          method: "POST",
+    const response = await fetch(
+      GAME_URL,
+      {
+        method: "POST",
 
-          headers: {
+        headers: {
 
-            "Content-Type":
-              "application/json",
+          "Content-Type":
+            "application/json",
 
-            "apikey":
-              SUPABASE_KEY,
+          "apikey":
+            SUPABASE_KEY,
 
-            "Authorization":
-              `Bearer ${token}`
+          "Authorization":
+            `Bearer ${token}`
 
-          },
+        },
 
-          body: JSON.stringify({
-            score: score
-          })
+        body: JSON.stringify({
+          score: score
+        })
 
-        }
-      );
+      }
+    );
 
 
     const result =
       await response.json();
+
+
+    console.log(
+      "Sekkechi result:",
+      result
+    );
 
 
     if (
@@ -199,18 +212,19 @@ async function saveGame() {
     }
 
 
-    // موجودی جدید
+    // ==========================
+    // موفقیت
+    // ==========================
+
     coinsEl.textContent =
       Number(
         result.coin_balance
       ).toLocaleString("fa-IR");
 
 
-    // امتیاز صفر شود
     score = 0;
 
     scoreEl.textContent = "0";
-
 
     playing = false;
 
@@ -222,13 +236,17 @@ async function saveGame() {
     showMessage(
       `✅ بازی ذخیره شد | ` +
       `+${result.coins_earned} 🪙 | ` +
+      `موجودی: ${result.coin_balance} 🪙 | ` +
       `سطح ${result.level}`
     );
 
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Game save error:",
+      error
+    );
 
 
     showMessage(
@@ -247,21 +265,22 @@ async function saveGame() {
 }
 
 
-// --------------------------------
-// دکمه پایان
-// --------------------------------
+// ================================
+// پایان و ذخیره
+// ================================
 
 saveButton.addEventListener(
   "click",
   async () => {
 
-    if (!playing && score === 0) {
+    if (!playing || score <= 0) {
 
       showMessage(
-        "ابتدا یک بازی انجام دهید."
+        "ابتدا بازی کنید و امتیاز بگیرید."
       );
 
       return;
+
     }
 
 
