@@ -54,14 +54,58 @@ async function getSession() {
 
 function getAccessToken() {
 
-  return (
-    localStorage.getItem("supabase_access_token") ||
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("sb-access-token")
-  );
+  const keys = [
+    "supabase_access_token",
+    "access_token",
+    "sb-access-token"
+  ];
 
+  for (const key of keys) {
+
+    const value =
+      localStorage.getItem(key);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  // جستجوی Sessionهای Supabase
+  for (let i = 0; i < localStorage.length; i++) {
+
+    const key =
+      localStorage.key(i);
+
+    if (!key) continue;
+
+    if (
+      key.includes("auth-token") ||
+      key.includes("supabase")
+    ) {
+
+      try {
+
+        const data =
+          JSON.parse(
+            localStorage.getItem(key)
+          );
+
+        const token =
+          data?.access_token ||
+          data?.currentSession?.access_token;
+
+        if (token) {
+          return token;
+        }
+
+      } catch (e) {
+        // مقدار JSON نیست
+      }
+    }
+  }
+
+  return null;
 }
-
 
 // ================================
 // پیام
