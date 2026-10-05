@@ -4,8 +4,8 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
-const TEST_CHECKOUT_URL =
-  `${SUPABASE_URL}/functions/v1/test-checkout`;
+const CHECKOUT_URL =
+  `${SUPABASE_URL}/functions/v1/swift-action`;
 
 const ACCESS_TOKEN_KEY =
   "supabase_access_token";
@@ -50,10 +50,7 @@ let cart = [];
    پیام
 ========================= */
 
-function showMessage(
-  text,
-  type = "error"
-) {
+function showMessage(text, type = "error") {
   if (!message) return;
 
   message.textContent = text;
@@ -67,8 +64,7 @@ function showMessage(
 
 function formatPrice(price) {
   return (
-    Number(price || 0)
-      .toLocaleString("fa-IR") +
+    Number(price || 0).toLocaleString("fa-IR") +
     " تومان"
   );
 }
@@ -95,22 +91,13 @@ function escapeHTML(value) {
 function readCart() {
   try {
     const value = JSON.parse(
-      localStorage.getItem(
-        "moghayesechi_cart"
-      ) || "[]"
+      localStorage.getItem("moghayesechi_cart") || "[]"
     );
 
-    return Array.isArray(value)
-      ? value
-      : [];
+    return Array.isArray(value) ? value : [];
 
   } catch (error) {
-
-    console.error(
-      "Cart error:",
-      error
-    );
-
+    console.error("Cart error:", error);
     return [];
   }
 }
@@ -121,27 +108,18 @@ function readCart() {
 ========================= */
 
 function renderOrder() {
-
   cart = readCart();
 
-  if (
-    !orderItems ||
-    !productsTotal ||
-    !orderTotal
-  ) {
+  if (!orderItems || !productsTotal || !orderTotal) {
     return;
   }
 
   if (!cart.length) {
-
     orderItems.innerHTML =
       "<p>🛒 سبد خرید خالی است.</p>";
 
-    productsTotal.textContent =
-      "۰ تومان";
-
-    orderTotal.textContent =
-      "۰ تومان";
+    productsTotal.textContent = "۰ تومان";
+    orderTotal.textContent = "۰ تومان";
 
     if (payButton) {
       payButton.disabled = true;
@@ -151,29 +129,20 @@ function renderOrder() {
   }
 
   let total = 0;
-
   let html = "";
 
   for (const item of cart) {
-
     const product =
       typeof products !== "undefined"
         ? products.find(
-            p =>
-              Number(p.id) ===
-              Number(item.id)
+            p => Number(p.id) === Number(item.id)
           )
         : null;
 
-    if (!product) {
-      continue;
-    }
+    if (!product) continue;
 
     const quantity =
-      Math.max(
-        1,
-        Number(item.qty || 1)
-      );
+      Math.max(1, Number(item.qty || 1));
 
     const price =
       Number(product.price || 0);
@@ -212,15 +181,11 @@ function renderOrder() {
   }
 
   if (!html) {
-
     orderItems.innerHTML =
       "<p>محصول معتبر در سبد خرید پیدا نشد.</p>";
 
-    productsTotal.textContent =
-      "۰ تومان";
-
-    orderTotal.textContent =
-      "۰ تومان";
+    productsTotal.textContent = "۰ تومان";
+    orderTotal.textContent = "۰ تومان";
 
     if (payButton) {
       payButton.disabled = true;
@@ -229,8 +194,7 @@ function renderOrder() {
     return;
   }
 
-  orderItems.innerHTML =
-    html;
+  orderItems.innerHTML = html;
 
   productsTotal.textContent =
     formatPrice(total);
@@ -249,15 +213,12 @@ function renderOrder() {
 ========================= */
 
 function getAccessToken() {
-
   return localStorage.getItem(
     ACCESS_TOKEN_KEY
   );
 }
 
-
 function getRefreshToken() {
-
   return localStorage.getItem(
     REFRESH_TOKEN_KEY
   );
@@ -269,7 +230,6 @@ function getRefreshToken() {
 ========================= */
 
 async function refreshAccessToken() {
-
   const refreshToken =
     getRefreshToken();
 
@@ -278,7 +238,6 @@ async function refreshAccessToken() {
   }
 
   try {
-
     const response =
       await fetch(
         `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
@@ -307,7 +266,6 @@ async function refreshAccessToken() {
       !response.ok ||
       !data.access_token
     ) {
-
       return null;
     }
 
@@ -317,7 +275,6 @@ async function refreshAccessToken() {
     );
 
     if (data.refresh_token) {
-
       localStorage.setItem(
         REFRESH_TOKEN_KEY,
         data.refresh_token
@@ -327,7 +284,6 @@ async function refreshAccessToken() {
     return data.access_token;
 
   } catch (error) {
-
     console.error(
       "Refresh error:",
       error
@@ -343,12 +299,10 @@ async function refreshAccessToken() {
 ========================= */
 
 async function getValidAccessToken() {
-
   let token =
     getAccessToken();
 
   if (!token) {
-
     token =
       await refreshAccessToken();
   }
@@ -362,7 +316,6 @@ async function getValidAccessToken() {
 ========================= */
 
 function buildOrderItems() {
-
   cart = readCart();
 
   return cart
@@ -413,20 +366,16 @@ function buildOrderItems() {
       }
 
       return {
-
-        product_id:
-          productId,
+        product_id: productId,
 
         product_name:
           String(
             product.name || ""
           ).trim(),
 
-        unit_price:
-          unitPrice,
+        unit_price: unitPrice,
 
-        quantity:
-          quantity
+        quantity: quantity
       };
 
     })
@@ -441,69 +390,49 @@ function buildOrderItems() {
 async function createOrder() {
 
   const fullName =
-    fullNameInput?.value.trim() ||
-    "";
+    fullNameInput?.value.trim() || "";
 
   const phone =
-    phoneInput?.value.trim() ||
-    "";
+    phoneInput?.value.trim() || "";
 
   const address =
-    addressInput?.value.trim() ||
-    "";
+    addressInput?.value.trim() || "";
 
-
-  /* نام */
 
   if (!fullName) {
-
     showMessage(
       "نام و نام خانوادگی را وارد کنید."
     );
 
     fullNameInput?.focus();
-
     return;
   }
 
 
-  /* موبایل */
-
-  if (
-    !/^09\d{9}$/.test(phone)
-  ) {
-
+  if (!/^09\d{9}$/.test(phone)) {
     showMessage(
       "شماره موبایل باید مانند 09123456789 باشد."
     );
 
     phoneInput?.focus();
-
     return;
   }
 
 
-  /* آدرس */
-
   if (!address) {
-
     showMessage(
       "آدرس تحویل را وارد کنید."
     );
 
     addressInput?.focus();
-
     return;
   }
 
-
-  /* قوانین */
 
   if (
     acceptRules &&
     !acceptRules.checked
   ) {
-
     showMessage(
       "لطفاً قوانین و مقررات را بپذیرید."
     );
@@ -512,13 +441,10 @@ async function createOrder() {
   }
 
 
-  /* آیتم‌ها */
-
   const items =
     buildOrderItems();
 
   if (!items.length) {
-
     showMessage(
       "سبد خرید خالی است یا اطلاعات کالاها نامعتبر است."
     );
@@ -527,13 +453,10 @@ async function createOrder() {
   }
 
 
-  /* توکن */
-
   let token =
     await getValidAccessToken();
 
   if (!token) {
-
     showMessage(
       "ابتدا وارد حساب کاربری شوید."
     );
@@ -543,18 +466,10 @@ async function createOrder() {
 
 
   const payload = {
-
-    name:
-      fullName,
-
-    phone:
-      phone,
-
-    address:
-      address,
-
-    items:
-      items
+    name: fullName,
+    phone: phone,
+    address: address,
+    items: items
   };
 
 
@@ -566,14 +481,10 @@ async function createOrder() {
   try {
 
     if (payButton) {
-
-      payButton.disabled =
-        true;
-
+      payButton.disabled = true;
       payButton.textContent =
         "⏳ در حال ثبت سفارش...";
     }
-
 
     showMessage(
       "در حال ثبت سفارش...",
@@ -585,12 +496,11 @@ async function createOrder() {
 
     let response =
       await fetch(
-        TEST_CHECKOUT_URL,
+        CHECKOUT_URL,
         {
           method: "POST",
 
           headers: {
-
             "Content-Type":
               "application/json",
 
@@ -602,40 +512,34 @@ async function createOrder() {
           },
 
           body:
-            JSON.stringify(
-              payload
-            )
+            JSON.stringify(payload)
         }
       );
 
 
-    /* اگر توکن منقضی شده */
+    /* اگر 401 بود، Refresh */
 
-    if (
-      response.status === 401
-    ) {
+    if (response.status === 401) {
 
       token =
         await refreshAccessToken();
 
       if (!token) {
-
         throw new Error(
           "نشست شما منقضی شده است. دوباره وارد شوید."
         );
       }
 
 
-      /* تلاش دوم */
+      /* درخواست دوم */
 
       response =
         await fetch(
-          TEST_CHECKOUT_URL,
+          CHECKOUT_URL,
           {
             method: "POST",
 
             headers: {
-
               "Content-Type":
                 "application/json",
 
@@ -647,9 +551,7 @@ async function createOrder() {
             },
 
             body:
-              JSON.stringify(
-                payload
-              )
+              JSON.stringify(payload)
           }
         );
     }
@@ -657,14 +559,11 @@ async function createOrder() {
 
     let result;
 
-
     try {
-
       result =
         await response.json();
 
     } catch {
-
       throw new Error(
         `پاسخ نامعتبر از سرور دریافت شد (${response.status}).`
       );
@@ -672,7 +571,7 @@ async function createOrder() {
 
 
     console.log(
-      "test-checkout:",
+      "swift-action:",
       result
     );
 
@@ -681,7 +580,6 @@ async function createOrder() {
       !response.ok ||
       !result.ok
     ) {
-
       throw new Error(
         result.error ||
         "ثبت سفارش انجام نشد."
@@ -710,12 +608,9 @@ async function createOrder() {
     );
 
 
-    /* انتقال به درگاه */
+    /* پرداخت واقعی */
 
-    if (
-      result.payment_url
-    ) {
-
+    if (result.payment_url) {
       window.location.href =
         result.payment_url;
 
@@ -723,7 +618,7 @@ async function createOrder() {
     }
 
 
-    /* اگر لینک پرداخت نبود */
+    /* پرداخت تستی */
 
     window.location.href =
       `payment-result.html` +
@@ -731,7 +626,9 @@ async function createOrder() {
         result.order_id || ""
       )}` +
       `&authority=${encodeURIComponent(
-        result.authority || ""
+        result.payment_authority ||
+        result.authority ||
+        ""
       )}` +
       `&test=1`;
 
@@ -741,7 +638,6 @@ async function createOrder() {
       "Checkout Error:",
       error
     );
-
 
     showMessage(
       "❌ " +
@@ -753,9 +649,7 @@ async function createOrder() {
 
 
     if (payButton) {
-
-      payButton.disabled =
-        false;
+      payButton.disabled = false;
 
       payButton.textContent =
         originalText;
@@ -769,7 +663,6 @@ async function createOrder() {
 ========================= */
 
 if (payButton) {
-
   payButton.addEventListener(
     "click",
     createOrder
@@ -778,14 +671,11 @@ if (payButton) {
 
 
 if (backButton) {
-
   backButton.addEventListener(
     "click",
     () => {
-
       window.location.href =
         "index.html";
-
     }
   );
 }
