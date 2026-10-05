@@ -1,5 +1,4 @@
-const SUPABASE_URL =
-  "https://evvdggckoalesyyyqhqm.supabase.co";
+const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
@@ -37,30 +36,30 @@ function showMessage(text) {
 
 
 // ================================
-// پیدا کردن توکن
+// پیدا کردن توکن کاربر
 // ================================
 
 function getToken() {
 
-  const directKeys = [
+  const keys = [
     "supabase_access_token",
     "access_token",
     "sb-access-token"
   ];
 
-  for (const key of directKeys) {
 
-    const token =
+  for (const key of keys) {
+
+    const value =
       localStorage.getItem(key);
 
-    if (token) {
-      return token;
+    if (value) {
+      return value;
     }
 
   }
 
 
-  // بررسی کلیدهای Supabase
   for (
     let i = 0;
     i < localStorage.length;
@@ -85,10 +84,7 @@ function getToken() {
         JSON.parse(raw);
 
 
-      if (
-        data &&
-        data.access_token
-      ) {
+      if (data?.access_token) {
 
         return data.access_token;
 
@@ -96,20 +92,23 @@ function getToken() {
 
 
       if (
-        data &&
-        data.currentSession &&
-        data.currentSession.access_token
+        data?.currentSession?.access_token
       ) {
 
         return data.currentSession.access_token;
 
       }
 
-    } catch (error) {
 
-      // JSON نبود، ادامه بده
+      if (
+        data?.session?.access_token
+      ) {
 
-    }
+        return data.session.access_token;
+
+      }
+
+    } catch (_) {}
 
   }
 
@@ -120,130 +119,14 @@ function getToken() {
 
 
 // ================================
-// بررسی اولیه صفحه
-// ================================
-
-showMessage(
-  "🎮 سکه‌چی آماده است."
-);
-
-
-// ================================
 // شروع بازی
 // ================================
 
-if (startButton) {
+function startGame() {
 
-  startButton.addEventListener(
-    "click",
-    function () {
+  score = 0;
 
-      score = 0;
-
-      playing = true;
+  playing = true;
 
 
-      scoreEl.textContent = "0";
-
-
-      target.disabled = false;
-
-      saveButton.disabled = false;
-
-      startButton.disabled = true;
-
-
-      showMessage(
-        "🎯 بازی شروع شد!"
-      );
-
-    }
-  );
-
-}
-
-
-// ================================
-// هدف بازی
-// ================================
-
-if (target) {
-
-  target.addEventListener(
-    "click",
-    function () {
-
-      if (!playing) {
-        return;
-      }
-
-
-      score++;
-
-
-      scoreEl.textContent =
-        score.toLocaleString("fa-IR");
-
-    }
-  );
-
-}
-
-
-// ================================
-// ذخیره نتیجه
-// ================================
-
-async function saveGame() {
-
-  const token =
-    getToken();
-
-
-  if (!token) {
-
-    showMessage(
-      "⚠️ بازی انجام شد، اما ورود کاربر برای ذخیره لازم است."
-    );
-
-    saveButton.disabled = false;
-
-    return;
-
-  }
-
-
-  saveButton.disabled = true;
-
-
-  showMessage(
-    "⏳ در حال ذخیره..."
-  );
-
-
-  try {
-
-    const response =
-      await fetch(
-        GAME_URL,
-        {
-          method: "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json",
-
-            "apikey":
-              SUPABASE_KEY,
-
-            "Authorization":
-              "Bearer " + token
-
-          },
-
-          body: JSON.stringify({
-            score: score
-          })
-
-       
+ 
