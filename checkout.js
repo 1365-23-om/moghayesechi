@@ -1,41 +1,82 @@
-const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
+const SUPABASE_URL =
+  "https://evvdggckoalesyyyqhqm.supabase.co";
+
 const SUPABASE_KEY =
   "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
 const TEST_CHECKOUT_URL =
   `${SUPABASE_URL}/functions/v1/test-checkout`;
 
-const fullNameInput = document.getElementById("fullName");
-const phoneInput = document.getElementById("phone");
-const addressInput = document.getElementById("address");
+const ACCESS_TOKEN_KEY =
+  "supabase_access_token";
 
-const orderItems = document.getElementById("orderItems");
-const productsTotal = document.getElementById("productsTotal");
-const orderTotal = document.getElementById("orderTotal");
+const REFRESH_TOKEN_KEY =
+  "supabase_refresh_token";
 
-const acceptRules = document.getElementById("acceptRules");
-const payButton = document.getElementById("payButton");
-const backButton = document.getElementById("backButton");
-const message = document.getElementById("message");
+const fullNameInput =
+  document.getElementById("fullName");
 
-let cart = JSON.parse(
-  localStorage.getItem("moghayesechi_cart") || "[]"
-);
+const phoneInput =
+  document.getElementById("phone");
 
-// -------------------------
-// Helpers
-// -------------------------
+const addressInput =
+  document.getElementById("address");
 
-function showMessage(text, type = "error") {
+const orderItems =
+  document.getElementById("orderItems");
+
+const productsTotal =
+  document.getElementById("productsTotal");
+
+const orderTotal =
+  document.getElementById("orderTotal");
+
+const acceptRules =
+  document.getElementById("acceptRules");
+
+const payButton =
+  document.getElementById("payButton");
+
+const backButton =
+  document.getElementById("backButton");
+
+const message =
+  document.getElementById("message");
+
+let cart = [];
+
+
+/* =========================
+   پیام
+========================= */
+
+function showMessage(
+  text,
+  type = "error"
+) {
   if (!message) return;
 
   message.textContent = text;
   message.className = type;
 }
 
+
+/* =========================
+   قیمت
+========================= */
+
 function formatPrice(price) {
-  return Number(price || 0).toLocaleString("fa-IR") + " تومان";
+  return (
+    Number(price || 0)
+      .toLocaleString("fa-IR") +
+    " تومان"
+  );
 }
+
+
+/* =========================
+   امنیت HTML
+========================= */
 
 function escapeHTML(value) {
   return String(value)
@@ -46,129 +87,423 @@ function escapeHTML(value) {
     .replace(/'/g, "&#039;");
 }
 
-// -------------------------
-// Render cart
-// -------------------------
+
+/* =========================
+   سبد خرید
+========================= */
+
+function readCart() {
+  try {
+    const value = JSON.parse(
+      localStorage.getItem(
+        "moghayesechi_cart"
+      ) || "[]"
+    );
+
+    return Array.isArray(value)
+      ? value
+      : [];
+
+  } catch (error) {
+
+    console.error(
+      "Cart error:",
+      error
+    );
+
+    return [];
+  }
+}
+
+
+/* =========================
+   نمایش سفارش
+========================= */
 
 function renderOrder() {
-  if (!orderItems || !productsTotal || !orderTotal) return;
+
+  cart = readCart();
+
+  if (
+    !orderItems ||
+    !productsTotal ||
+    !orderTotal
+  ) {
+    return;
+  }
 
   if (!cart.length) {
+
     orderItems.innerHTML =
       "<p>🛒 سبد خرید خالی است.</p>";
+
+    productsTotal.textContent =
+      "۰ تومان";
+
+    orderTotal.textContent =
+      "۰ تومان";
 
     if (payButton) {
       payButton.disabled = true;
     }
-
-    productsTotal.textContent = "۰ تومان";
-    orderTotal.textContent = "۰ تومان";
 
     return;
   }
 
   let total = 0;
 
-  orderItems.innerHTML = cart
-    .map((item) => {
-      const product =
-        typeof products !== "undefined"
-          ? products.find((p) => p.id === item.id)
-          : null;
+  let html = "";
 
-      if (!product) return "";
+  for (const item of cart) {
 
-      const quantity = Number(item.qty || 1);
-      const subtotal =
-        Number(product.price || 0) * quantity;
+    const product =
+      typeof products !== "undefined"
+        ? products.find(
+            p =>
+              Number(p.id) ===
+              Number(item.id)
+          )
+        : null;
 
-      total += subtotal;
+    if (!product) {
+      continue;
+    }
 
-      return `
-        <div class="product">
-          <strong>${escapeHTML(product.name)}</strong>
+    const quantity =
+      Math.max(
+        1,
+        Number(item.qty || 1)
+      );
 
-          <div>
-            تعداد:
-            ${quantity.toLocaleString("fa-IR")}
-          </div>
+    const price =
+      Number(product.price || 0);
 
-          <div>
-            قیمت واحد:
-            ${formatPrice(product.price)}
-          </div>
+    const subtotal =
+      price * quantity;
 
-          <div>
-            مبلغ:
-            <strong>${formatPrice(subtotal)}</strong>
-          </div>
+    total += subtotal;
+
+    html += `
+      <div class="product">
+
+        <strong>
+          ${escapeHTML(product.name)}
+        </strong>
+
+        <div>
+          تعداد:
+          ${quantity.toLocaleString("fa-IR")}
         </div>
-      `;
-    })
-    .join("");
 
-  productsTotal.textContent = formatPrice(total);
-  orderTotal.textContent = formatPrice(total);
+        <div>
+          قیمت واحد:
+          ${formatPrice(price)}
+        </div>
+
+        <div>
+          مبلغ:
+          <strong>
+            ${formatPrice(subtotal)}
+          </strong>
+        </div>
+
+      </div>
+    `;
+  }
+
+  if (!html) {
+
+    orderItems.innerHTML =
+      "<p>محصول معتبر در سبد خرید پیدا نشد.</p>";
+
+    productsTotal.textContent =
+      "۰ تومان";
+
+    orderTotal.textContent =
+      "۰ تومان";
+
+    if (payButton) {
+      payButton.disabled = true;
+    }
+
+    return;
+  }
+
+  orderItems.innerHTML =
+    html;
+
+  productsTotal.textContent =
+    formatPrice(total);
+
+  orderTotal.textContent =
+    formatPrice(total);
+
+  if (payButton) {
+    payButton.disabled = false;
+  }
 }
 
-// -------------------------
-// Create test order
-// -------------------------
+
+/* =========================
+   توکن
+========================= */
+
+function getAccessToken() {
+
+  return localStorage.getItem(
+    ACCESS_TOKEN_KEY
+  );
+}
+
+
+function getRefreshToken() {
+
+  return localStorage.getItem(
+    REFRESH_TOKEN_KEY
+  );
+}
+
+
+/* =========================
+   Refresh Session
+========================= */
+
+async function refreshAccessToken() {
+
+  const refreshToken =
+    getRefreshToken();
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+
+    const response =
+      await fetch(
+        `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            "apikey":
+              SUPABASE_KEY
+          },
+
+          body: JSON.stringify({
+            refresh_token:
+              refreshToken
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (
+      !response.ok ||
+      !data.access_token
+    ) {
+
+      return null;
+    }
+
+    localStorage.setItem(
+      ACCESS_TOKEN_KEY,
+      data.access_token
+    );
+
+    if (data.refresh_token) {
+
+      localStorage.setItem(
+        REFRESH_TOKEN_KEY,
+        data.refresh_token
+      );
+    }
+
+    return data.access_token;
+
+  } catch (error) {
+
+    console.error(
+      "Refresh error:",
+      error
+    );
+
+    return null;
+  }
+}
+
+
+/* =========================
+   توکن معتبر
+========================= */
+
+async function getValidAccessToken() {
+
+  let token =
+    getAccessToken();
+
+  if (!token) {
+
+    token =
+      await refreshAccessToken();
+  }
+
+  return token;
+}
+
+
+/* =========================
+   ساخت آیتم‌های سفارش
+========================= */
+
+function buildOrderItems() {
+
+  cart = readCart();
+
+  return cart
+    .map(item => {
+
+      const product =
+        typeof products !== "undefined"
+          ? products.find(
+              p =>
+                Number(p.id) ===
+                Number(item.id)
+            )
+          : null;
+
+      if (!product) {
+        return null;
+      }
+
+      const productId =
+        Number(product.id);
+
+      const quantity =
+        Number(item.qty || 1);
+
+      const unitPrice =
+        Number(product.price || 0);
+
+      if (
+        !Number.isSafeInteger(productId) ||
+        productId <= 0
+      ) {
+        return null;
+      }
+
+      if (
+        !Number.isSafeInteger(unitPrice) ||
+        unitPrice < 0
+      ) {
+        return null;
+      }
+
+      if (
+        !Number.isSafeInteger(quantity) ||
+        quantity <= 0 ||
+        quantity > 100
+      ) {
+        return null;
+      }
+
+      return {
+
+        product_id:
+          productId,
+
+        product_name:
+          String(
+            product.name || ""
+          ).trim(),
+
+        unit_price:
+          unitPrice,
+
+        quantity:
+          quantity
+      };
+
+    })
+    .filter(Boolean);
+}
+
+
+/* =========================
+   ثبت سفارش
+========================= */
 
 async function createOrder() {
+
   const fullName =
-    fullNameInput?.value.trim() || "";
+    fullNameInput?.value.trim() ||
+    "";
 
   const phone =
-    phoneInput?.value.trim() || "";
+    phoneInput?.value.trim() ||
+    "";
 
   const address =
-    addressInput?.value.trim() || "";
+    addressInput?.value.trim() ||
+    "";
 
-  // Name
+
+  /* نام */
+
   if (!fullName) {
+
     showMessage(
       "نام و نام خانوادگی را وارد کنید."
     );
 
     fullNameInput?.focus();
+
     return;
   }
 
-  // Phone
-  if (!/^09\d{9}$/.test(phone)) {
+
+  /* موبایل */
+
+  if (
+    !/^09\d{9}$/.test(phone)
+  ) {
+
     showMessage(
       "شماره موبایل باید مانند 09123456789 باشد."
     );
 
     phoneInput?.focus();
+
     return;
   }
 
-  // Address
+
+  /* آدرس */
+
   if (!address) {
+
     showMessage(
       "آدرس تحویل را وارد کنید."
     );
 
     addressInput?.focus();
-    return;
-  }
-
-  // Cart
-  if (!cart.length) {
-    showMessage(
-      "سبد خرید خالی است."
-    );
 
     return;
   }
 
-  // Rules
+
+  /* قوانین */
+
   if (
     acceptRules &&
     !acceptRules.checked
   ) {
+
     showMessage(
       "لطفاً قوانین و مقررات را بپذیرید."
     );
@@ -176,12 +511,29 @@ async function createOrder() {
     return;
   }
 
-  // Login token
-  const token = localStorage.getItem(
-    "supabase_access_token"
-  );
+
+  /* آیتم‌ها */
+
+  const items =
+    buildOrderItems();
+
+  if (!items.length) {
+
+    showMessage(
+      "سبد خرید خالی است یا اطلاعات کالاها نامعتبر است."
+    );
+
+    return;
+  }
+
+
+  /* توکن */
+
+  let token =
+    await getValidAccessToken();
 
   if (!token) {
+
     showMessage(
       "ابتدا وارد حساب کاربری شوید."
     );
@@ -189,143 +541,258 @@ async function createOrder() {
     return;
   }
 
-  // Prepare items
-  const items = cart
-    .map((item) => {
-      const product =
-        typeof products !== "undefined"
-          ? products.find(
-              (p) => p.id === item.id
-            )
-          : null;
 
-      if (!product) return null;
+  const payload = {
 
-      return {
-        product_id: product.id,
-        product_name: product.name,
-        unit_price: Number(product.price || 0),
-        quantity: Number(item.qty || 1)
-      };
-    })
-    .filter(Boolean);
+    name:
+      fullName,
 
-  if (!items.length) {
-    showMessage(
-      "محصول معتبر در سبد خرید پیدا نشد."
-    );
+    phone:
+      phone,
 
-    return;
-  }
+    address:
+      address,
 
-  // Disable button
-  if (payButton) {
-    payButton.disabled = true;
-    payButton.textContent =
-      "⏳ در حال ثبت سفارش...";
-  }
+    items:
+      items
+  };
+
+
+  const originalText =
+    payButton?.textContent ||
+    "💳 ادامه برای پرداخت";
+
 
   try {
-    const response = await fetch(
-      TEST_CHECKOUT_URL,
-      {
-        method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "apikey": SUPABASE_KEY
-        },
+    if (payButton) {
 
-        body: JSON.stringify({
-          name: fullName,
-          phone: phone,
-          address: address,
-          items: items
-        })
-      }
+      payButton.disabled =
+        true;
+
+      payButton.textContent =
+        "⏳ در حال ثبت سفارش...";
+    }
+
+
+    showMessage(
+      "در حال ثبت سفارش...",
+      "loading"
     );
+
+
+    /* درخواست اول */
+
+    let response =
+      await fetch(
+        TEST_CHECKOUT_URL,
+        {
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+
+            "Authorization":
+              `Bearer ${token}`,
+
+            "apikey":
+              SUPABASE_KEY
+          },
+
+          body:
+            JSON.stringify(
+              payload
+            )
+        }
+      );
+
+
+    /* اگر توکن منقضی شده */
+
+    if (
+      response.status === 401
+    ) {
+
+      token =
+        await refreshAccessToken();
+
+      if (!token) {
+
+        throw new Error(
+          "نشست شما منقضی شده است. دوباره وارد شوید."
+        );
+      }
+
+
+      /* تلاش دوم */
+
+      response =
+        await fetch(
+          TEST_CHECKOUT_URL,
+          {
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+
+              "Authorization":
+                `Bearer ${token}`,
+
+              "apikey":
+                SUPABASE_KEY
+            },
+
+            body:
+              JSON.stringify(
+                payload
+              )
+          }
+        );
+    }
+
 
     let result;
 
+
     try {
-      result = await response.json();
+
+      result =
+        await response.json();
+
     } catch {
+
       throw new Error(
-        "پاسخ نامعتبر از سرور دریافت شد."
+        `پاسخ نامعتبر از سرور دریافت شد (${response.status}).`
       );
     }
 
-    if (!response.ok || !result.ok) {
+
+    console.log(
+      "test-checkout:",
+      result
+    );
+
+
+    if (
+      !response.ok ||
+      !result.ok
+    ) {
+
       throw new Error(
         result.error ||
-          "ثبت سفارش انجام نشد."
+        "ثبت سفارش انجام نشد."
       );
     }
 
-    // Clear cart after successful order creation
+
+    /* ذخیره نتیجه */
+
+    sessionStorage.setItem(
+      "moghayesechi_last_order",
+      JSON.stringify(result)
+    );
+
+
+    /* پاک کردن سبد */
+
     localStorage.removeItem(
       "moghayesechi_cart"
     );
 
-    /*
-      Edge Function باید payment_url
-      را برگرداند.
-    */
 
-    if (!result.payment_url) {
-      throw new Error(
-        "لینک پرداخت از سرور دریافت نشد."
-      );
+    showMessage(
+      "✅ سفارش با موفقیت ثبت شد.",
+      "success"
+    );
+
+
+    /* انتقال به درگاه */
+
+    if (
+      result.payment_url
+    ) {
+
+      window.location.href =
+        result.payment_url;
+
+      return;
     }
 
-    // Redirect to payment/test checkout
+
+    /* اگر لینک پرداخت نبود */
+
     window.location.href =
-      result.payment_url;
+      `payment-result.html` +
+      `?order_id=${encodeURIComponent(
+        result.order_id || ""
+      )}` +
+      `&authority=${encodeURIComponent(
+        result.authority || ""
+      )}` +
+      `&test=1`;
 
   } catch (error) {
+
     console.error(
       "Checkout Error:",
       error
     );
 
+
     showMessage(
       "❌ " +
-        (error.message ||
-          "خطا در ثبت سفارش")
+      (
+        error.message ||
+        "خطا در ثبت سفارش"
+      )
     );
 
+
     if (payButton) {
-      payButton.disabled = false;
+
+      payButton.disabled =
+        false;
+
       payButton.textContent =
-        "💳 پرداخت آزمایشی";
+        originalText;
     }
   }
 }
 
-// -------------------------
-// Events
-// -------------------------
+
+/* =========================
+   دکمه‌ها
+========================= */
 
 if (payButton) {
+
   payButton.addEventListener(
     "click",
     createOrder
   );
 }
 
+
 if (backButton) {
+
   backButton.addEventListener(
     "click",
     () => {
+
       window.location.href =
         "index.html";
+
     }
   );
 }
 
-// -------------------------
-// Initial render
-// -------------------------
+
+/* =========================
+   شروع
+========================= */
 
 renderOrder();
