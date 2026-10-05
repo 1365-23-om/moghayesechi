@@ -1,132 +1,77 @@
-const SUPABASE_URL = "https://evvdggckoalesyyyqhqm.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
-
-const GAME_URL =
-  SUPABASE_URL + "/functions/v1/sekkechi-game";
-
-
-const coinsEl = document.getElementById("coins");
-const energyEl = document.getElementById("energy");
-const scoreEl = document.getElementById("score");
-
-const target = document.getElementById("target");
 const startButton = document.getElementById("startButton");
 const saveButton = document.getElementById("saveButton");
+const target = document.getElementById("target");
 
+const scoreEl = document.getElementById("score");
+const coinsEl = document.getElementById("coins");
+const energyEl = document.getElementById("energy");
 const message = document.getElementById("gameMessage");
 
-
 let score = 0;
+let coins = 0;
+let energy = 20;
 let playing = false;
 
 
-// ================================
-// پیام
-// ================================
+// شروع بازی
+startButton.onclick = function () {
 
-function showMessage(text) {
+    score = 0;
+    energy = 20;
+    playing = true;
 
-  if (message) {
-    message.textContent = text;
-  }
+    scoreEl.textContent = "0";
+    energyEl.textContent = "20";
 
-}
+    target.disabled = false;
+    saveButton.disabled = false;
+    startButton.disabled = true;
 
-
-// ================================
-// پیدا کردن توکن کاربر
-// ================================
-
-function getToken() {
-
-  const keys = [
-    "supabase_access_token",
-    "access_token",
-    "sb-access-token"
-  ];
+    message.textContent = "🎯 بازی شروع شد!";
+};
 
 
-  for (const key of keys) {
+// زدن هدف
+target.onclick = function () {
 
-    const value =
-      localStorage.getItem(key);
-
-    if (value) {
-      return value;
+    if (!playing) {
+        return;
     }
 
-  }
+    score++;
+
+    scoreEl.textContent =
+        score.toLocaleString("fa-IR");
+};
 
 
-  for (
-    let i = 0;
-    i < localStorage.length;
-    i++
-  ) {
+// پایان بازی
+saveButton.onclick = function () {
 
-    const key =
-      localStorage.key(i);
+    if (score === 0) {
 
-    if (!key) continue;
+        message.textContent =
+            "🎯 اول امتیاز بگیر!";
 
+        return;
+    }
 
-    const raw =
-      localStorage.getItem(key);
+    playing = false;
 
-    if (!raw) continue;
+    target.disabled = true;
+    startButton.disabled = false;
 
+    // هر 10 امتیاز = 1 سکه
+    const earnedCoins =
+        Math.floor(score / 10);
 
-    try {
+    coins += earnedCoins;
 
-      const data =
-        JSON.parse(raw);
+    coinsEl.textContent =
+        coins.toLocaleString("fa-IR");
 
-
-      if (data?.access_token) {
-
-        return data.access_token;
-
-      }
-
-
-      if (
-        data?.currentSession?.access_token
-      ) {
-
-        return data.currentSession.access_token;
-
-      }
-
-
-      if (
-        data?.session?.access_token
-      ) {
-
-        return data.session.access_token;
-
-      }
-
-    } catch (_) {}
-
-  }
-
-
-  return null;
-
-}
-
-
-// ================================
-// شروع بازی
-// ================================
-
-function startGame() {
-
-  score = 0;
-
-  playing = true;
-
-
- 
+    message.textContent =
+        "✅ بازی تمام شد | +" +
+        earnedCoins +
+        " 🪙 سکه";
+};
