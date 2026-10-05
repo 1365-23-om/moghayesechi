@@ -1,79 +1,93 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>🎮 سکه‌چی</title>
 
   <style>
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
       margin: 0;
+      min-height: 100vh;
+      padding: 16px;
       font-family: Tahoma, Arial, sans-serif;
       background: linear-gradient(135deg, #f6d365, #fda085);
-      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
     }
 
     .game {
       width: 100%;
-      max-width: 500px;
-      padding: 20px;
+      max-width: 520px;
     }
 
     .back {
       display: block;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       color: #111827;
       text-decoration: none;
       font-weight: bold;
     }
 
     .card {
-      background: white;
-      border-radius: 25px;
-      padding: 25px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 24px 16px;
       text-align: center;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 12px 35px rgba(0,0,0,.18);
     }
 
     h1 {
-      margin-top: 0;
-      font-size: 32px;
+      margin: 5px 0 20px;
+      font-size: 30px;
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 20px 0;
+      gap: 8px;
+      margin-bottom: 15px;
     }
 
     .stat {
       background: #f3f4f6;
-      padding: 15px 5px;
-      border-radius: 15px;
+      border-radius: 14px;
+      padding: 12px 4px;
       font-weight: bold;
     }
 
+    .stat span {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 18px;
+    }
+
     .target {
-      width: 170px;
-      height: 170px;
-      border-radius: 50%;
-      border: none;
-      background: #ffd43b;
-      font-size: 70px;
-      cursor: pointer;
-      margin: 25px auto;
+      width: min(55vw, 180px);
+      height: min(55vw, 180px);
+      min-width: 145px;
+      min-height: 145px;
+      max-width: 180px;
+      max-height: 180px;
+
       display: block;
+      margin: 25px auto;
+
+      border: 0;
+      border-radius: 50%;
+      background: #ffd43b;
       box-shadow: 0 8px 0 #d9a900;
+
+      font-size: 68px;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
     }
 
     .target:active {
@@ -83,17 +97,22 @@
 
     .buttons {
       display: flex;
-      gap: 10px;
-      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
     }
 
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 16px;
+    .buttons button {
+      width: 100%;
+      min-height: 56px;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: 17px;
       font-weight: bold;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     #startButton {
@@ -106,28 +125,43 @@
       color: white;
     }
 
-    button:disabled {
-      opacity: 0.45;
+    .buttons button:active {
+      transform: scale(.98);
+    }
+
+    .buttons button:disabled {
+      opacity: .45;
       cursor: not-allowed;
     }
 
     #gameMessage {
-      margin-top: 20px;
       min-height: 30px;
+      margin-top: 18px;
+      font-size: 15px;
       font-weight: bold;
+    }
+
+    @media (min-width: 600px) {
+      .buttons {
+        flex-direction: row;
+      }
+
+      .buttons button {
+        flex: 1;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="game">
+  <main class="game">
 
     <a class="back" href="index.html">
-      ← بازگشت
+      ← بازگشت به مقایسه‌چی
     </a>
 
-    <div class="card">
+    <section class="card">
 
       <h1>🎮 سکه‌چی</h1>
 
@@ -154,12 +188,13 @@
       </div>
 
       <p>
-        روی هدف بزن و امتیاز بگیر!
+        روی هدف بزن و امتیاز بگیر.
       </p>
 
       <button
         id="target"
         class="target"
+        type="button"
         disabled
       >
         🎯
@@ -167,12 +202,19 @@
 
       <div class="buttons">
 
-        <button id="startButton">
-          شروع بازی
+        <button
+          id="startButton"
+          type="button"
+        >
+          🎮 شروع بازی
         </button>
 
-        <button id="saveButton" disabled>
-          💾 پایان
+        <button
+          id="saveButton"
+          type="button"
+          disabled
+        >
+          💾 پایان و دریافت سکه
         </button>
 
       </div>
@@ -181,15 +223,16 @@
         🎮 آماده بازی
       </div>
 
-    </div>
+    </section>
 
-  </div>
+  </main>
+
 
   <script>
+    "use strict";
 
     let score = 0;
     let coins = 0;
-    let energy = 20;
     let playing = false;
 
     const startButton =
@@ -207,33 +250,30 @@
     const coinsEl =
       document.getElementById("coins");
 
-    const energyEl =
-      document.getElementById("energy");
-
     const message =
       document.getElementById("gameMessage");
 
 
-    startButton.onclick = function () {
+    // شروع بازی
+    startButton.addEventListener("click", function () {
 
       score = 0;
-      energy = 20;
       playing = true;
 
       scoreEl.textContent = "0";
-      energyEl.textContent = "20";
 
       target.disabled = false;
       saveButton.disabled = false;
       startButton.disabled = true;
 
       message.textContent =
-        "🎯 بازی شروع شد!";
+        "🎯 بازی شروع شد! حالا روی هدف بزن.";
 
-    };
+    });
 
 
-    target.onclick = function () {
+    // افزایش امتیاز
+    target.addEventListener("click", function () {
 
       if (!playing) {
         return;
@@ -244,15 +284,16 @@
       scoreEl.textContent =
         score.toLocaleString("fa-IR");
 
-    };
+    });
 
 
-    saveButton.onclick = function () {
+    // پایان بازی
+    saveButton.addEventListener("click", function () {
 
       if (score <= 0) {
 
         message.textContent =
-          "🎯 اول امتیاز بگیر!";
+          "🎯 اول روی هدف بزن و امتیاز بگیر.";
 
         return;
       }
@@ -262,20 +303,20 @@
       target.disabled = true;
       startButton.disabled = false;
 
-      const earned =
+      const earnedCoins =
         Math.floor(score / 10);
 
-      coins += earned;
+      coins += earnedCoins;
 
       coinsEl.textContent =
         coins.toLocaleString("fa-IR");
 
       message.textContent =
-        "✅ پایان بازی | +" +
-        earned +
+        "✅ بازی تمام شد | +" +
+        earnedCoins +
         " 🪙 سکه";
 
-    };
+    });
 
   </script>
 
