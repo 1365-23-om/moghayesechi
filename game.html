@@ -228,95 +228,308 @@
   </main>
 
 
-  <script>
-    "use strict";
+<script>
+"use strict";
 
-    let score = 0;
-    let coins = 0;
-    let playing = false;
+const SUPABASE_URL =
+  "https://evvdggckoalesyyyqhqm.supabase.co";
 
-    const startButton =
-      document.getElementById("startButton");
+const SUPABASE_KEY =
+  "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
-    const saveButton =
-      document.getElementById("saveButton");
-
-    const target =
-      document.getElementById("target");
-
-    const scoreEl =
-      document.getElementById("score");
-
-    const coinsEl =
-      document.getElementById("coins");
-
-    const message =
-      document.getElementById("gameMessage");
+const GAME_URL =
+  `${SUPABASE_URL}/functions/v1/sekkechi-game-v2`;
 
 
-    // شروع بازی
-    startButton.addEventListener("click", function () {
+let score = 0;
+let coins = 0;
+let playing = false;
 
-      score = 0;
-      playing = true;
 
-      scoreEl.textContent = "0";
+const startButton =
+  document.getElementById("startButton");
 
-      target.disabled = false;
-      saveButton.disabled = false;
-      startButton.disabled = true;
+const saveButton =
+  document.getElementById("saveButton");
+
+const target =
+  document.getElementById("target");
+
+const scoreEl =
+  document.getElementById("score");
+
+const coinsEl =
+  document.getElementById("coins");
+
+const message =
+  document.getElementById("gameMessage");
+
+
+// -----------------------------
+// گرفتن توکن ورود کاربر
+// -----------------------------
+
+function getAccessToken() {
+
+  return localStorage.getItem(
+    "supabase_access_token"
+  );
+
+}
+
+
+// -----------------------------
+// دریافت موجودی از Supabase
+// -----------------------------
+
+async function loadGameData() {
+
+  const token =
+    getAccessToken();
+
+  if (!token) {
+
+    message.textContent =
+      "⚠️ برای ذخیره سکه ابتدا وارد حساب شوید.";
+
+    return;
+  }
+
+  try {
+
+    const response =
+      await fetch(
+        GAME_URL,
+        {
+          method: "GET",
+
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization":
+              `Bearer ${token}`
+          }
+        }
+      );
+
+
+    const result =
+      await response.json();
+
+
+    if (!response.ok || !result.ok) {
+
+      throw new Error(
+        result.error ||
+        "دریافت اطلاعات بازی انجام نشد"
+      );
+
+    }
+
+
+    coins =
+      Number(result.coin_balance || 0);
+
+    coinsEl.textContent =
+      coins.toLocaleString("fa-IR");
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "⚠️ موجودی سکه دریافت نشد.";
+
+  }
+
+}
+
+
+// -----------------------------
+// شروع بازی
+// -----------------------------
+
+startButton.addEventListener(
+  "click",
+  function () {
+
+    score = 0;
+
+    playing = true;
+
+    scoreEl.textContent = "0";
+
+    target.disabled = false;
+
+    saveButton.disabled = false;
+
+    startButton.disabled = true;
+
+    message.textContent =
+      "🎯 بازی شروع شد! حالا روی هدف بزن.";
+
+  }
+);
+
+
+// -----------------------------
+// زدن هدف
+// -----------------------------
+
+target.addEventListener(
+  "click",
+  function () {
+
+    if (!playing) {
+      return;
+    }
+
+    score++;
+
+    scoreEl.textContent =
+      score.toLocaleString("fa-IR");
+
+  }
+);
+
+
+// -----------------------------
+// پایان و ذخیره بازی
+// -----------------------------
+
+saveButton.addEventListener(
+  "click",
+  async function () {
+
+    if (score <= 0) {
 
       message.textContent =
-        "🎯 بازی شروع شد! حالا روی هدف بزن.";
+        "🎯 اول روی هدف بزن و امتیاز بگیر.";
 
-    });
+      return;
+    }
 
 
-    // افزایش امتیاز
-    target.addEventListener("click", function () {
+    const token =
+      getAccessToken();
 
-      if (!playing) {
-        return;
+
+    if (!token) {
+
+      message.textContent =
+        "❌ ابتدا وارد حساب کاربری شوید.";
+
+      return;
+    }
+
+
+    playing = false;
+
+    target.disabled = true;
+
+    saveButton.disabled = true;
+
+    message.textContent =
+      "⏳ در حال ذخیره بازی...";
+
+
+    try {
+
+      const response =
+        await fetch(
+          GAME_URL,
+          {
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                `Bearer ${token}`
+
+            },
+
+            body: JSON.stringify({
+              score: score
+            })
+
+          }
+        );
+
+
+      const result =
+        await response.json();
+
+
+      if (!response.ok || !result.ok) {
+
+        throw new Error(
+          result.error ||
+          "ذخیره بازی انجام نشد"
+        );
+
       }
 
-      score++;
 
-      scoreEl.textContent =
-        score.toLocaleString("fa-IR");
+      // موجودی واقعی Supabase
 
-    });
-
-
-    // پایان بازی
-    saveButton.addEventListener("click", function () {
-
-      if (score <= 0) {
-
-        message.textContent =
-          "🎯 اول روی هدف بزن و امتیاز بگیر.";
-
-        return;
-      }
-
-      playing = false;
-
-      target.disabled = true;
-      startButton.disabled = false;
-
-      const earnedCoins =
-        Math.floor(score / 10);
-
-      coins += earnedCoins;
+      coins =
+        Number(result.coin_balance || 0);
 
       coinsEl.textContent =
         coins.toLocaleString("fa-IR");
 
-      message.textContent =
-        "✅ بازی تمام شد | +" +
-        earnedCoins +
-        " 🪙 سکه";
 
-    });
+      message.textContent =
+        "✅ بازی ذخیره شد | +" +
+        Number(result.coins_earned || 0)
+          .toLocaleString("fa-IR") +
+        " 🪙 سکه | سطح " +
+        Number(result.level || 1);
+
+
+      score = 0;
+
+      scoreEl.textContent = "0";
+
+      startButton.disabled = false;
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      playing = false;
+
+      target.disabled = true;
+
+      saveButton.disabled = false;
+
+      startButton.disabled = false;
+
+      message.textContent =
+        "❌ " +
+        (
+          error.message ||
+          "خطا در ذخیره بازی"
+        );
+
+    }
+
+  }
+);
+
+
+// -----------------------------
+// بارگذاری موجودی هنگام ورود
+// -----------------------------
+
+loadGameData();
 
   </script>
 
