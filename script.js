@@ -114,37 +114,54 @@ async function checkout() {
   const SUPABASE_KEY =
     "sb_publishable_fkx37LxzP3Lb1q2HNxsoKw_6oTDNLUl";
 
-  const items = cart.map(item => {
-    const product = products.find(p => p.id === item.id);
+  const items = cart
+    .map(item => {
+      const product = products.find(
+        p => p.id === item.id
+      );
 
-    return {
-      product_id: product.id,
-      product_name: product.name,
-      unit_price: product.price,
-      quantity: item.qty
-    };
-  });
+      if (!product) return null;
+
+      return {
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: product.price,
+        quantity: item.qty
+      };
+    })
+    .filter(Boolean);
 
   try {
     const token =
-      localStorage.getItem("supabase_access_token");
+      localStorage.getItem(
+        "supabase_access_token"
+      );
 
     if (!token) {
-      alert("ابتدا باید وارد حساب کاربری شوید.");
+      alert(
+        "ابتدا باید وارد حساب کاربری شوید."
+      );
       return;
     }
 
     const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/create-order`,
+      `${SUPABASE_URL}/functions/v1/swift-action`,
       {
         method: "POST",
+
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "apikey": SUPABASE_KEY
+          "Content-Type":
+            "application/json",
+
+          "Authorization":
+            `Bearer ${token}`,
+
+          "apikey":
+            SUPABASE_KEY
         },
+
         body: JSON.stringify({
-          full_name: name,
+          name: name,
           phone: phone,
           address: address,
           items: items
@@ -152,25 +169,38 @@ async function checkout() {
       }
     );
 
-    const result = await response.json();
+    const result =
+      await response.json();
 
-    if (!response.ok || !result.ok) {
+    if (
+      !response.ok ||
+      !result.ok
+    ) {
       throw new Error(
-        result.error || "خطا در ثبت سفارش"
+        result.error ||
+        "خطا در ثبت سفارش"
       );
     }
 
     alert(
       "✅ سفارش با موفقیت ثبت شد.\n\n" +
       "شماره سفارش:\n" +
-      result.order.id
+      (
+        result.order_id ||
+        result.order?.id ||
+        "ثبت شد"
+      )
     );
 
     cart = [];
+
     saveCart();
 
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Checkout error:",
+      error
+    );
 
     alert(
       "❌ ثبت سفارش انجام نشد:\n" +
@@ -178,8 +208,3 @@ async function checkout() {
     );
   }
 }
-
-cartButton.addEventListener("click", openCart);
-
-showProducts();
-updateCart();
