@@ -304,7 +304,19 @@ if (payButton) {
 
 if (backButton) {
   backButton.addEventListener("click", () => {
+    const confirmed = window.confirm(
+      "سفارش را لغو کنیم و تمام محصولات سبد خرید را پاک کنیم؟"
+    );
+
+    if (!confirmed) return;
+
+    localStorage.removeItem("moghayesechi_cart");
+    cart = [];
+    renderOrder();
     window.location.href = "index.html";
+  });
+}
+
   });
 }
 
